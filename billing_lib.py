@@ -1,4 +1,28 @@
 from typing import List
+import datetime, calendar
+from genericpath import isfile
+import logging
+from sys import exit
+
+
+class RunTimeProperties:
+    def __init__(self):
+        # TODO: Replace this with a proper get_mode function to grab user input. Should allow for dry-runs, send only, compose only, etc.
+        self.prepare = True
+        self.compose = True
+        self.send = True
+        self.month = ''
+        self.year = ''
+        self.google_path = get_google_drive_path()
+        self.logger_fname = self.google_path + 'log.txt'
+        self.sql_fname = self.google_path + 'billing.sqlite'
+        self.logger = create_logger(self.logger_fname, 'DEBUG')
+        if not isfile(self.sql_fname):
+            self.logger.info("db file doesn't exist!")
+            input("Something has gone very wrong! db file doesn't exist! Press enter to exit")
+            exit(1)
+
+        self.logger.info("Run Time Properties are initialized")
 
 
 class Tenant:
@@ -20,22 +44,6 @@ class TenantList:
     def __init__(self):
         self.tennant_list: List[Tenant] = []
 
-    def get_billing_month(self):
-        """ Get a string from the cmd line indicating which month to bill
-        Assume current year, unless otherwise specified. """
-
-    def init_sql(self):
-        """ Setup SQL cursor """
-        pass
-
-    def get_tenant_info(self):
-        """ retrieve list of active tenants for month specified """
-        pass
-
-    def get_bills(self):
-        """ Pass tenant list to SQL, return bills for month specified """
-        pass
-
 
 def get_google_drive_path():
     """ Get Google Drive path on windows machines.
@@ -54,10 +62,7 @@ def get_google_drive_path():
     res = cursor.fetchone()
     path = res[2][4:]
     db.close()
-
-    full_path = path + '\\software_dev\\mtWallets_billing\\'
-
-    return full_path
+    return path + '\\software_dev\\mt_wallets_billing\\'
 
 
 def format_values(value):
@@ -67,3 +72,62 @@ def format_values(value):
         value = round(value, 2)
 
     return str(value)
+
+
+def create_logger(log_file_const, log_level='DEBUG', log_name='a_logger_has_no_name'):
+    """Creates a logger fro the server. Depends on logging module.
+    Logger is created with default level set to 'debug'.
+    level may be changed later by config files."""
+
+    # Create logger
+    log = logging.getLogger(log_name)
+    log.setLevel(logging.DEBUG)
+    fh = logging.FileHandler(log_file_const, mode='w')      # file handler object for logger
+    ch = logging.StreamHandler()                            # create console handler
+
+    ch.setLevel(logging.DEBUG)                              # default log levels set to debug in case config fails
+    fh.setLevel(logging.DEBUG)                              # default log levels set to debug in case config fails
+
+    # set levels from config file
+    if log_level == 'DEBUG':
+        ch.setLevel(logging.DEBUG)
+        fh.setLevel(logging.DEBUG)
+    elif log_level == 'INFO':
+        ch.setLevel(logging.INFO)
+        fh.setLevel(logging.INFO)
+    elif log_level == 'WARNING':
+        ch.setLevel(logging.WARNING)
+        fh.setLevel(logging.WARNING)
+    elif log_level == 'ERROR':
+        ch.setLevel(logging.ERROR)
+        fh.setLevel(logging.ERROR)
+    elif log_level == 'CRITICAL':
+        ch.setLevel(logging.CRITICAL)
+        fh.setLevel(logging.CRITICAL)
+    else:
+        log.critical('Bad logger level argument. reverting to "debug" logger')
+        log.setLevel(logging.DEBUG)
+
+    # create formatter and add it to the handlers
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    fh.setFormatter(formatter)
+    ch.setFormatter(formatter)
+
+    # add the handlers to the logger
+    log.addHandler(fh)
+    log.addHandler(ch)
+
+    return log
+
+
+def get_bill_date():
+    m = input("Please input month, leave blank for current:\n")
+    y = input("Please input year, leave blank for current:\n")
+    if m == '':
+        m = calendar.month_name[datetime.date.today().month]
+        m = m.lower()
+
+    if y == '':
+        y = datetime.date.today().year
+
+    return y, m

@@ -5,7 +5,7 @@ class Mailer:
     def __init__(self):
         pass
 
-    def compose_email(self):
+    def compose_email(self, tenant: Tenant):
         """ Composes an email and returns it as an object """
 
         ##### OLD CODE FOR EDUCATIONAL PURPOSES ONLY! ########

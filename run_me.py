@@ -1,18 +1,34 @@
 from billing_lib import *
+import sqlinterface
 import mailer
 import pdfcompositor
 
 
 # init
+rtp = RunTimeProperties()
 tl = TenantList()
+sql = sqlinterface.SqlInterface()
 mail = mailer.Mailer()
 pdf = pdfcompositor.PdfCompositor()
 
 # run
-tl.init_sql()
-tl.get_tenant_info()
-tl.get_bills()
+sql.get_tenant_info(tl)
 for tenant in tl.tennant_list:
-    pdf.compose_bill(tenant)
-    mail.compose_email(tenant)
-    mail.send_email(tenant)
+    if rtp.prepare:
+        sql.get_bill(tenant)
+    else:
+        # TODO: we're not preparing new bills, we must be sending or composing existing ones. Handle this case!
+        pass
+
+    if rtp.compose:
+        pdf.compose_bill(tenant)
+    else:
+        # TODO: handle this case!
+        pass
+
+    if rtp.send:
+        mail.compose_email(tenant)
+        mail.send_email(tenant)
+    else:
+        # TODO: handle this case!
+        pass
