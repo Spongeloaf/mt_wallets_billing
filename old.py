@@ -9,30 +9,6 @@ from email import encoders
 from openpyxl import load_workbook
 
 
-class Tenant:
-    def __init__(self, email: str = '', name: str = '', roomsheet: str = '', date: str = '', billing_cycle: str = '', charge_room: str = '', charge_internet: str = '',
-                 charge_gas: str = '', charge_electricity: str = '', charge_other: str = '', charge_total: str = ''):
-        self.email = email
-        self.name = name
-        self.roomsheet = roomsheet
-        self.date = date
-        self.billing_cycle = billing_cycle
-        self.charge_room = charge_room
-        self.charge_internet = charge_internet
-        self.charge_gas = charge_gas
-        self.charge_electricity = charge_electricity
-        self.charge_other = charge_other
-        self.charge_total = charge_total
-
-
-def format_values(value):
-    """ takes a value and ensures it gets rounded if needed and converted to a string. """
-
-    if value is float:
-        value = round(value, 2)
-
-    return str(value)
-
 
 
 def prepare_bill(tenant_num):
@@ -72,37 +48,7 @@ def prepare_bill(tenant_num):
     document.write("{}s Rent for {}.docx".format(format_values(mergeName), mergeBilling)) # Save the new bill
 
 
-def send_bill():
-        fromaddr = "MTWallets@outlook.com"
-        toaddr = str(tenantEmail)
 
-        msg = MIMEMultipart()
-
-        msg['From'] = fromaddr
-        msg['To'] = toaddr
-        msg['Subject'] = "Rent bill for {}".format(billingDate.strftime('%B %Y'))
-
-        body = "Please see the attached bill for {} rent at 3G Crestlea Crescent".format(
-            billingDate.strftime('%B %Y'))
-
-        msg.attach(MIMEText(body, 'plain'))
-
-        filename = "{}s Rent for {}.docx".format(format_values(mergeName), mergeBilling)
-        attachment = open(filename, "rb")
-
-        part = MIMEBase('application', 'octet-stream')
-        part.set_payload((attachment).read())
-        encoders.encode_base64(part)
-        part.add_header('Content-Disposition', "attachment; filename= %s" % filename)
-
-        msg.attach(part)
-
-        server = smtplib.SMTP('smtp-mail.outlook.com', 587)
-        server.starttls()
-        server.login(fromaddr, "MTnoreply430")
-        text = msg.as_string()
-        server.sendmail(fromaddr, toaddr, text)
-        server.quit()
 
 # init
 billingTemplate = 'billingTemplate.docx'                        # This shit here is the template for generated bills
