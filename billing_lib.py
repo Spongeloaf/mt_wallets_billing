@@ -5,7 +5,7 @@ import logging
 from sys import exit
 
 
-class RunTimeProperties:
+class RunTimeParams:
     def __init__(self):
         # TODO: Replace this with a proper get_mode function to grab user input. Should allow for dry-runs, send only, compose only, etc.
         self.prepare = True
@@ -24,10 +24,28 @@ class RunTimeProperties:
 
         self.logger.info("Run Time Properties are initialized")
 
+    def get_bill_date(self):
+        m = input("Please input month, leave blank for current:\n")
+        y = input("Please input year, leave blank for current:\n")
+
+        if m == '':
+            m = datetime.date.today().month
+        if m is not int:
+            m = int(m)
+
+        if y == '':
+            y = datetime.date.today().year
+        if y is not int:
+            y = int(y)
+
+        self.month = m
+        self.year = y
+
 
 class Tenant:
-    def __init__(self, email: str = '', name: str = '', charge_room: str = '', charge_internet: str = '',
-                 charge_gas: str = '', charge_electricity: str = '', charge_other: str = '', charge_total: str = ''):
+    def __init__(self, id: int = -1, email: str = '', name: str = '', charge_room: float = 0.0, charge_internet: float = 0.0,
+                 charge_gas: float = 0.0, charge_electricity: float = 0.0, charge_other: float = 0.0, charge_total: float = 0.0):
+        self.id = id
         self.email = email
         self.name = name
         self.charge_room = charge_room
@@ -36,13 +54,31 @@ class Tenant:
         self.charge_electricity = charge_electricity
         self.charge_other = charge_other
         self.charge_total = charge_total
-        self.pdf = ''
-        self.email = None
+        self.pdf = None
+        self.bill = None
+
+    def update_total(self):
+        self.charge_total = round((self.charge_room + self.charge_internet + self.charge_gas + self.charge_electricity + self.charge_other), 2)
 
 
-class TenantList:
-    def __init__(self):
-        self.tennant_list: List[Tenant] = []
+class UtilityBill:
+    def __init__(self, label: str, amount: int, tenants: List[int]):
+        self.label = label
+        self.amount = amount
+        self.tenants = tenants
+
+
+# class TenantBill:
+#     def __init__(self, tenant_id, label, year, month, electricity=0.0, gas=0.0, internet=0.0, other=0.0):
+#         self.tenant_id = tenant_id
+#         self.label = label
+#         self.year = year
+#         self.month = month
+#         self.electricity = electricity
+#         self.gas = gas
+#         self.internet = internet
+#         self.other = other
+#         self.total = None
 
 
 def get_google_drive_path():
@@ -120,14 +156,4 @@ def create_logger(log_file_const, log_level='DEBUG', log_name='a_logger_has_no_n
     return log
 
 
-def get_bill_date():
-    m = input("Please input month, leave blank for current:\n")
-    y = input("Please input year, leave blank for current:\n")
-    if m == '':
-        m = calendar.month_name[datetime.date.today().month]
-        m = m.lower()
 
-    if y == '':
-        y = datetime.date.today().year
-
-    return y, m

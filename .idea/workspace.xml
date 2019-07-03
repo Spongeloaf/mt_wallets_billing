@@ -2,12 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="511d2727-2721-4653-9a3b-d6d3db55e65e" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/sqlinterface.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/billing_lib.py" beforeDir="false" afterPath="$PROJECT_DIR$/billing_lib.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mailer.py" beforeDir="false" afterPath="$PROJECT_DIR$/mailer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/run_me.py" beforeDir="false" afterPath="$PROJECT_DIR$/run_me.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sqlinterface.py" beforeDir="false" afterPath="$PROJECT_DIR$/sqlinterface.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -26,27 +24,27 @@
       <usages-collector id="statistics.file.extensions.open">
         <counts>
           <entry key="md" value="1" />
-          <entry key="py" value="12" />
+          <entry key="py" value="14" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.open">
         <counts>
           <entry key="Markdown" value="1" />
-          <entry key="Python" value="12" />
+          <entry key="Python" value="14" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
-          <entry key="dummy" value="20" />
+          <entry key="dummy" value="25" />
           <entry key="md" value="4" />
-          <entry key="py" value="3584" />
+          <entry key="py" value="6247" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
           <entry key="Markdown" value="4" />
-          <entry key="PLAIN_TEXT" value="20" />
-          <entry key="Python" value="3584" />
+          <entry key="PLAIN_TEXT" value="25" />
+          <entry key="Python" value="6247" />
         </counts>
       </usages-collector>
     </session>
@@ -68,30 +66,38 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/billing_lib.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="44">
-              <caret line="14" column="22" selection-start-line="14" selection-start-column="22" selection-end-line="14" selection-end-column="22" />
+            <state relative-caret-position="616">
+              <caret line="80" column="27" lean-forward="true" selection-start-line="80" selection-start-column="27" selection-end-line="80" selection-end-column="27" />
               <folding>
                 <element signature="e#0#23#0" expanded="true" />
-                <element signature="e#44#621#0" />
-                <element signature="e#1152#1216#0" />
-                <element signature="e#1260#1896#0" />
-                <element signature="e#1405#1570#0" />
-                <element signature="e#2746#4404#0" />
-                <element signature="e#4051#4345#0" />
-                <marker date="1562092669554" expanded="true" signature="143:943" ph="..." />
+                <element signature="e#144#1299#0" />
+                <marker date="1562118269578" expanded="true" signature="139:2198" ph="..." />
+                <marker date="1562118269578" expanded="true" signature="2396:2787" ph="..." />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/sqlinterface.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-443">
+              <caret line="9" column="32" lean-forward="true" selection-start-line="9" selection-start-column="32" selection-end-line="9" selection-end-column="32" />
+              <folding>
+                <element signature="e#0#70#0" expanded="true" />
+                <marker date="1562118269565" expanded="true" signature="1761:2271" ph="..." />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/sqlinterface.py">
+        <entry file="file://$PROJECT_DIR$/old.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="418">
-              <caret line="19" column="39" selection-start-line="19" selection-start-column="39" selection-end-line="19" selection-end-column="39" />
+            <state relative-caret-position="-946">
+              <caret line="11" lean-forward="true" selection-start-line="11" selection-end-line="11" />
               <folding>
-                <element signature="e#0#61#0" expanded="true" />
-                <marker date="1562101142484" expanded="true" signature="98:103" ph="..." />
+                <element signature="e#0#31#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -127,11 +133,11 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/tests.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="220">
-              <caret line="10" column="17" selection-start-line="10" selection-start-column="17" selection-end-line="10" selection-end-column="17" />
+            <state relative-caret-position="330">
+              <caret line="15" lean-forward="true" selection-start-line="15" selection-end-line="15" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
               </folding>
@@ -160,9 +166,9 @@
         <option value="$PROJECT_DIR$/sql.py" />
         <option value="$PROJECT_DIR$/mailer.py" />
         <option value="$PROJECT_DIR$/run_me.py" />
+        <option value="$PROJECT_DIR$/tests.py" />
         <option value="$PROJECT_DIR$/billing_lib.py" />
         <option value="$PROJECT_DIR$/sqlinterface.py" />
-        <option value="$PROJECT_DIR$/tests.py" />
       </list>
     </option>
   </component>
@@ -281,9 +287,9 @@
       <window_info anchor="bottom" id="Version Control" order="2" />
       <window_info anchor="bottom" id="Python Console" order="3" />
       <window_info anchor="bottom" id="Message" order="4" />
-      <window_info anchor="bottom" id="Find" order="5" />
-      <window_info anchor="bottom" id="Run" order="6" />
-      <window_info anchor="bottom" id="Debug" order="7" weight="0.4" />
+      <window_info anchor="bottom" id="Find" order="5" weight="0.3299532" />
+      <window_info anchor="bottom" id="Run" order="6" weight="0.3299532" />
+      <window_info anchor="bottom" id="Debug" order="7" visible="true" weight="0.39937598" />
       <window_info anchor="bottom" id="Cvs" order="8" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="9" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="10" />
@@ -295,14 +301,68 @@
   <component name="VcsContentAnnotationSettings">
     <option name="myLimit" value="2678400000" />
   </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/sqlinterface.py</url>
+          <line>48</line>
+          <option name="timeStamp" value="14" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/sqlinterface.py</url>
+          <line>44</line>
+          <option name="timeStamp" value="15" />
+        </line-breakpoint>
+      </breakpoints>
+      <default-breakpoints>
+        <breakpoint type="python-exception">
+          <properties notifyOnTerminate="true" exception="BaseException">
+            <option name="notifyOnTerminate" value="true" />
+          </properties>
+        </breakpoint>
+      </default-breakpoints>
+    </breakpoint-manager>
+  </component>
   <component name="editorHistoryManager">
+    <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python36/Lib/calendar.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="278">
+          <caret line="58" selection-start-line="58" selection-end-line="58" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python36/Lib/logging/__init__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="278">
+          <caret line="1030" selection-start-line="1030" selection-end-line="1030" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/run_me.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="198">
+          <caret line="9" column="27" selection-start-line="9" selection-start-column="27" selection-end-line="9" selection-end-column="27" />
+          <folding>
+            <element signature="e#0#25#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/old.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-20">
+        <state relative-caret-position="-946">
           <caret line="11" lean-forward="true" selection-start-line="11" selection-end-line="11" />
           <folding>
             <element signature="e#0#31#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pdfcompositor.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="242">
+          <caret line="11" selection-start-line="11" selection-end-line="11" />
         </state>
       </provider>
     </entry>
@@ -323,64 +383,36 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$USER_HOME$/AppData/Local/Programs/Python/Python36/Lib/calendar.py">
+    <entry file="file://$PROJECT_DIR$/tests.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="278">
-          <caret line="58" selection-start-line="58" selection-end-line="58" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pdfcompositor.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="242">
-          <caret line="11" selection-start-line="11" selection-end-line="11" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/run_me.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="198">
-          <caret line="9" column="27" selection-start-line="9" selection-start-column="27" selection-end-line="9" selection-end-column="27" />
+        <state relative-caret-position="330">
+          <caret line="15" lean-forward="true" selection-start-line="15" selection-end-line="15" />
           <folding>
-            <element signature="e#0#25#0" expanded="true" />
+            <element signature="e#0#18#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/billing_lib.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="44">
-          <caret line="14" column="22" selection-start-line="14" selection-start-column="22" selection-end-line="14" selection-end-column="22" />
+        <state relative-caret-position="616">
+          <caret line="80" column="27" lean-forward="true" selection-start-line="80" selection-start-column="27" selection-end-line="80" selection-end-column="27" />
           <folding>
             <element signature="e#0#23#0" expanded="true" />
-            <element signature="e#44#621#0" />
-            <element signature="e#1152#1216#0" />
-            <element signature="e#1260#1896#0" />
-            <element signature="e#1405#1570#0" />
-            <element signature="e#2746#4404#0" />
-            <element signature="e#4051#4345#0" />
-            <marker date="1562092669554" expanded="true" signature="143:943" ph="..." />
+            <element signature="e#144#1299#0" />
+            <marker date="1562118269578" expanded="true" signature="139:2198" ph="..." />
+            <marker date="1562118269578" expanded="true" signature="2396:2787" ph="..." />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/sqlinterface.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="418">
-          <caret line="19" column="39" selection-start-line="19" selection-start-column="39" selection-end-line="19" selection-end-column="39" />
+        <state relative-caret-position="-443">
+          <caret line="9" column="32" lean-forward="true" selection-start-line="9" selection-start-column="32" selection-end-line="9" selection-end-column="32" />
           <folding>
-            <element signature="e#0#61#0" expanded="true" />
-            <marker date="1562101142484" expanded="true" signature="98:103" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/tests.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="220">
-          <caret line="10" column="17" selection-start-line="10" selection-start-column="17" selection-end-line="10" selection-end-column="17" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
+            <element signature="e#0#70#0" expanded="true" />
+            <marker date="1562118269565" expanded="true" signature="1761:2271" ph="..." />
           </folding>
         </state>
       </provider>

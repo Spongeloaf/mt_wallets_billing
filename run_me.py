@@ -5,17 +5,17 @@ import pdfcompositor
 
 
 # init
-rtp = RunTimeProperties()
+rtp = RunTimeParams()
 tl = TenantList()
 sql = sqlinterface.SqlInterface()
 mail = mailer.Mailer()
 pdf = pdfcompositor.PdfCompositor()
 
 # run
-sql.get_tenant_info(tl)
+sql.get_tenant_list(tl)
 for tenant in tl.tennant_list:
     if rtp.prepare:
-        sql.get_bill(tenant)
+        sql.get_utility_bills(tenant)
     else:
         # TODO: we're not preparing new bills, we must be sending or composing existing ones. Handle this case!
         pass
