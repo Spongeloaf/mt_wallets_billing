@@ -1,1 +1,1 @@
-mt_wallets_billing
+mt_wallets_billing is a utility for landlords to automatically generate and send rent bills to their tenants. It is still in the pre-alpha stage.

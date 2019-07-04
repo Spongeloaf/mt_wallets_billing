@@ -12,7 +12,7 @@ mail = mailer.Mailer()
 pdf = pdfcompositor.PdfCompositor()
 
 # run
-sql.get_tenant_list(tl)
+sql.get_active_tenants(tl)
 for tenant in tl.tennant_list:
     if rtp.prepare:
         sql.get_utility_bills(tenant)

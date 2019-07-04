@@ -1,5 +1,5 @@
 from typing import List
-import datetime, calendar
+import datetime
 from genericpath import isfile
 import logging
 from sys import exit
@@ -14,15 +14,15 @@ class RunTimeParams:
         self.month = ''
         self.year = ''
         self.google_path = get_google_drive_path()
-        self.logger_fname = self.google_path + 'log.txt'
+        self.logger_fname = self.google_path + 'rtp_log.txt'
         self.sql_fname = self.google_path + 'billing.sqlite'
-        self.logger = create_logger(self.logger_fname, 'DEBUG')
+        self.logger = create_logger(self.logger_fname, 'DEBUG', "rtp_log")
         if not isfile(self.sql_fname):
-            self.logger.info("db file doesn't exist!")
+            self.logger.debug("db file doesn't exist!")
             input("Something has gone very wrong! db file doesn't exist! Press enter to exit")
             exit(1)
 
-        self.logger.info("Run Time Properties are initialized")
+        self.logger.debug("Run Time Properties are initialized")
 
     def get_bill_date(self):
         m = input("Please input month, leave blank for current:\n")
@@ -41,10 +41,14 @@ class RunTimeParams:
         self.month = m
         self.year = y
 
+    def critical_stop(self, message: str):
+        self.logger.critical("Program halted for reason: {}".format(message))
+        exit(1)
+
 
 class Tenant:
     def __init__(self, id: int = -1, email: str = '', name: str = '', charge_room: float = 0.0, charge_internet: float = 0.0,
-                 charge_gas: float = 0.0, charge_electricity: float = 0.0, charge_other: float = 0.0, charge_total: float = 0.0):
+                 charge_gas: float = 0.0, charge_electricity: float = 0.0, charge_other: float = 0.0, charge_total: float = 0.0, other_memo: str = ''):
         self.id = id
         self.email = email
         self.name = name
@@ -54,8 +58,9 @@ class Tenant:
         self.charge_electricity = charge_electricity
         self.charge_other = charge_other
         self.charge_total = charge_total
+        self.other_memo = other_memo
         self.pdf = None
-        self.bill = None
+        # TODO: Add other_memo support to SQL lib.
 
     def update_total(self):
         self.charge_total = round((self.charge_room + self.charge_internet + self.charge_gas + self.charge_electricity + self.charge_other), 2)
@@ -66,19 +71,6 @@ class UtilityBill:
         self.label = label
         self.amount = amount
         self.tenants = tenants
-
-
-# class TenantBill:
-#     def __init__(self, tenant_id, label, year, month, electricity=0.0, gas=0.0, internet=0.0, other=0.0):
-#         self.tenant_id = tenant_id
-#         self.label = label
-#         self.year = year
-#         self.month = month
-#         self.electricity = electricity
-#         self.gas = gas
-#         self.internet = internet
-#         self.other = other
-#         self.total = None
 
 
 def get_google_drive_path():
@@ -156,4 +148,6 @@ def create_logger(log_file_const, log_level='DEBUG', log_name='a_logger_has_no_n
     return log
 
 
-
+def print_bills(tl: List[Tenant]):
+    for t in tl:
+        print(vars(t))
