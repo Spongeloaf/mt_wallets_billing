@@ -1,9 +1,13 @@
-""" Contains all the code for mailing bills """
-from billing_lib import Tenant
+from billing_lib import *
+
 
 class Mailer:
-    def __init__(self):
-        pass
+    def __init__(self, rtp: RunTimeParams):
+        self.rtp = rtp
+        self.logger_fname = rtp.google_path + 'mail_log.txt'
+        self.logger = create_logger(self.logger_fname, "DEBUG", "mail_log")
+
+
 
     def compose_email(self, tenant: Tenant):
         """ Composes an email and returns it as an object """

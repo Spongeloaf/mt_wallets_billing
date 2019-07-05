@@ -3,26 +3,59 @@ import datetime
 from genericpath import isfile
 import logging
 from sys import exit
+import configparser
 
 
 class RunTimeParams:
     def __init__(self):
-        # TODO: Replace this with a proper get_mode function to grab user input. Should allow for dry-runs, send only, compose only, etc.
         self.prepare = True
         self.compose = True
         self.send = True
         self.month = ''
         self.year = ''
         self.google_path = get_google_drive_path()
-        self.logger_fname = self.google_path + 'rtp_log.txt'
-        self.sql_fname = self.google_path + 'billing.sqlite'
-        self.logger = create_logger(self.logger_fname, 'DEBUG', "rtp_log")
-        if not isfile(self.sql_fname):
-            self.logger.debug("db file doesn't exist!")
-            input("Something has gone very wrong! db file doesn't exist! Press enter to exit")
-            exit(1)
 
+        self.config_fname = self.google_path + 'settings.ini'
+        if not isfile(self.config_fname):
+            self.logger.info("config file doesn't exist. Creating...")
+            self.create_config_file()
+        self.config = self.load_config()
+        self.rtp_log_leve = self.config['rtp']['log_level']
+        self.rtp_allow_dupes = bool(self.config['rtp']['allow_duplicate_bills'])
+        self.sql_log_level = self.config['sql']['log_level']
+        self.sql_db_fname = self.google_path + self.config['sql']['db_file_name']
+        self.pdf_log_level = self.config['pdf']['log_level']
+        self.pdf_docx_template = self.google_path + self.config['pdf']['docx_template']
+
+        self.logger_fname = self.google_path + 'rtp_log.txt'
+        self.logger = create_logger(self.logger_fname, 'DEBUG', "rtp_log")
+        if not isfile(self.sql_db_fname):
+            self.critical_stop("Something has gone very wrong! db file doesn't exist!")
         self.logger.debug("Run Time Properties are initialized")
+
+    def create_config_file(self):
+        """ Creates a new, default, server config file. """
+        config = configparser.ConfigParser()
+
+        # default values:
+        config['rtp'] = {'log_level': 'DEBUG'}
+        config['sql'] = {'log_level': 'DEBUG',  'db_file_name': 'billing.sqlite'}
+        config['pdf'] = {'log_level': 'DEBUG', 'docx_template': 'billing_template.docx'}
+        config['email'] = {'log_level': 'DEBUG', 'email_user': 'MTWallets@outlook.com',
+                           'email_pswd': 'MTnoreply430', 'server': 'smtp-mail.outlook.com',
+                           'port': '587', 'msg_body': 'Please see the attached rent bill. E-transfers or questions may be sent to peter.v@live.ca'}
+
+        config_file = open(self.config_fname, 'x')
+        config.write(config_file)
+
+    def load_config(self):
+        """loads a config file """
+        try:
+            config = configparser.ConfigParser()
+            config.read(self.config_fname)
+            return config
+        except KeyError:
+            self.critical_stop('Config file KeyError. Check config file for missing values!')
 
     def get_bill_date(self):
         m = input("Please input month, leave blank for current:\n")
@@ -48,7 +81,7 @@ class RunTimeParams:
 
 class Tenant:
     def __init__(self, id: int = -1, email: str = '', name: str = '', charge_room: float = 0.0, charge_internet: float = 0.0,
-                 charge_gas: float = 0.0, charge_electricity: float = 0.0, charge_other: float = 0.0, charge_total: float = 0.0, other_memo: str = ''):
+                 charge_gas: float = 0.0, charge_electricity: float = 0.0, charge_other: float = 0.0, charge_total: float = 0.0):
         self.id = id
         self.email = email
         self.name = name
@@ -58,19 +91,23 @@ class Tenant:
         self.charge_electricity = charge_electricity
         self.charge_other = charge_other
         self.charge_total = charge_total
-        self.other_memo = other_memo
+        self.memo_internet = ''
+        self.memo_gas = ''
+        self.memo_electricity = ''
+        self.memo_other = ''
         self.pdf = None
-        # TODO: Add other_memo support to SQL lib.
+        self.docx = None
 
     def update_total(self):
         self.charge_total = round((self.charge_room + self.charge_internet + self.charge_gas + self.charge_electricity + self.charge_other), 2)
 
 
 class UtilityBill:
-    def __init__(self, label: str, amount: int, tenants: List[int]):
+    def __init__(self, label: str, amount: int, tenants: List[int], memo: str = ''):
         self.label = label
         self.amount = amount
         self.tenants = tenants
+        self.memo = memo
 
 
 def get_google_drive_path():

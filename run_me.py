@@ -4,6 +4,7 @@ import mailer
 import pdfcompositor
 
 
+# TODO: Replace this with a proper get_mode function to grab user input. Should allow for dry-runs, send only, compose only, etc.
 # init
 rtp = RunTimeParams()
 tl = TenantList()

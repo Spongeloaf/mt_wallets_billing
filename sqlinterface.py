@@ -1,4 +1,4 @@
-from billing_lib import Tenant, RunTimeParams, UtilityBill, create_logger
+from billing_lib import *
 import sqlite3
 from typing import List
 
@@ -9,8 +9,8 @@ class SqlInterface:
         """ Setup SQL, check DB, create cursor. """
         self.rtp = rtp
         self.logger_fname = rtp.google_path + 'sql_log.txt'
-        self.logger = create_logger(self.logger_fname, "DEBUG", "sql_log")
-        self.sql_conn = sqlite3.connect(rtp.sql_fname)
+        self.logger = create_logger(self.logger_fname, self.rtp.sql_log_level, "sql_log")
+        self.sql_conn = sqlite3.connect(self.rtp.sql_db_fname)
         self.sql_curr = self.sql_conn.cursor()
 
     def get_tenants_by_date(self, month: int, year: int):
@@ -43,7 +43,9 @@ class SqlInterface:
         for row in self.sql_curr:
             label = row[0]
             amount = row[1]
-
+            memo = row[5]
+            if memo is None:
+                memo = ''
             tenants = []
             tenants_str: str = row[4]
             tenants_split = tenants_str.split(',')
@@ -55,7 +57,7 @@ class SqlInterface:
                     self.logger.critical("Value error in get_utility_bills, bad tenant string: {}".format(tenants_str))
                     self.rtp.critical_stop("Stopped by sql.get_utility_bills() for ValueError")
 
-            ub = UtilityBill(label, amount, tenants)
+            ub = UtilityBill(label, amount, tenants, memo)
             ubl.append(ub)
             self.logger.info("Utility Bill found: {} for {} split between tenants: {}".format(label, amount, tenants_str))
 
@@ -83,18 +85,22 @@ class SqlInterface:
             count = len(bill.tenants)
             if bill.label == "electricity":
                 tenant.charge_electricity = round((bill.amount / count), 2)
+                tenant.memo_electricity = bill.memo
                 return
 
             if bill.label == "gas":
                 tenant.charge_gas = round((bill.amount / count), 2)
+                tenant.memo_gas = bill.memo
                 return
 
             if bill.label == "internet":
                 tenant.charge_internet = round((bill.amount / count), 2)
+                tenant.memo_internet = bill.memo
                 return
 
             if bill.label == "other":
                 tenant.charge_other = round((bill.amount / count), 2)
+                tenant.memo_other = bill.memo
                 return
 
             self.logger.critical("Bad bill label in sql.add_bill(): {}".format(vars(bill)))
@@ -105,8 +111,11 @@ class SqlInterface:
 
     def create_tenant_bills(self, tl: List[Tenant]):
         for t in tl:
-            self.sql_curr.execute("INSERT INTO tenant_bills VALUES (?,?,?,?,?,?,?,?,?,?)",
-                                  [t.id, t.name, self.rtp.month, self.rtp.year, t.charge_room, t.charge_internet, t.charge_electricity, t.charge_gas, t.charge_other, t.charge_total])
+            # The 0 in the argument list is for "paid = false"
+            self.sql_curr.execute("INSERT INTO tenant_bills VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                                  [t.id, t.name, self.rtp.month, self.rtp.year, 0,
+                                   t.charge_room, t.charge_internet, t.charge_electricity, t.charge_gas, t.charge_other, t.charge_total,
+                                   t.memo_internet, t.memo_gas, t.memo_electricity, t.memo_other])
             self.sql_conn.commit()
 
     def print_cursor(self):
