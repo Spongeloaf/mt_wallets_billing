@@ -1,4 +1,10 @@
 from billing_lib import *
+from typing import List
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
+from email import encoders
 
 
 class Mailer:
@@ -7,43 +13,36 @@ class Mailer:
         self.logger_fname = rtp.google_path + 'mail_log.txt'
         self.logger = create_logger(self.logger_fname, "DEBUG", "mail_log")
 
+        # init mail server
+        self.mail_server = smtplib.SMTP(self.rtp.mail_server, self.rtp.mail_port)
+        self.mail_server.starttls()
 
+    def compose_email(self, tl: List[Tenant]):
+        """ Composes an email_addr for each tenant """
+        for t in tl:
+            t.email_msg = MIMEMultipart()
+            # Do we need this?
+            t.email_msg['From'] = self.rtp.mail_user
+            t.email_msg['To'] = t.email_addr
+            t.email_msg['Subject'] = "Rent for {} {}".format(self.rtp.month, self.rtp.year)
+            t.email_msg.attach(MIMEText(self.rtp.mail_msg, 'plain'))
 
-    def compose_email(self, tenant: Tenant):
-        """ Composes an email and returns it as an object """
+            try:
+                attachment = open(t.pdf, "rb")
+            except TypeError:
+                self.logger.critical("Invalid path to attachment in mail.compose_mail: {}".format(t.pdf))
+                self.rtp.critical_stop("stopped by TypeError in mail.compose_mail")
 
-        ##### OLD CODE FOR EDUCATIONAL PURPOSES ONLY! ########
-        fromaddr = "MTWallets@outlook.com"
-        toaddr = str(tenantEmail)
+            part = MIMEBase('application', 'octet-stream')
+            part.set_payload(attachment.read())
+            encoders.encode_base64(part)
+            part.add_header('Content-Disposition', "attachment; filename= %s" % t.pdf_short_name)
+            t.email_msg.attach(part)
 
-        msg = MIMEMultipart()
-
-        msg['From'] = fromaddr
-        msg['To'] = toaddr
-        msg['Subject'] = "Rent bill for {}".format(billingDate.strftime('%B %Y'))
-
-        body = "Please see the attached bill for {} rent at 3G Crestlea Crescent".format(
-            billingDate.strftime('%B %Y'))
-
-        msg.attach(MIMEText(body, 'plain'))
-
-        filename = "{}s Rent for {}.docx".format(format_values(mergeName), mergeBilling)
-        attachment = open(filename, "rb")
-
-        part = MIMEBase('application', 'octet-stream')
-        part.set_payload((attachment).read())
-        encoders.encode_base64(part)
-        part.add_header('Content-Disposition', "attachment; filename= %s" % filename)
-
-        msg.attach(part)
-
-        server = smtplib.SMTP('smtp-mail.outlook.com', 587)
-        server.starttls()
-        server.login(fromaddr, "MTnoreply430")
-        text = msg.as_string()
-        server.sendmail(fromaddr, toaddr, text)
-        server.quit()
-
-    def send_email(self, tenant: Tenant):
-        """ Send an email """
-        pass
+    def send_email(self, tl: List[Tenant]):
+        """ Sends an email_addr to each tenant """
+        self.mail_server.login(self.rtp.mail_user, self.rtp.mail_pswd)
+        for t in tl:
+            body = t.email_msg.as_string()
+            self.mail_server.sendmail(self.rtp.mail_user, t.email_addr, body)
+        self.mail_server.quit()

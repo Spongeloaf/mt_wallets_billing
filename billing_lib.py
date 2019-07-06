@@ -14,21 +14,26 @@ class RunTimeParams:
         self.month = ''
         self.year = ''
         self.google_path = get_google_drive_path()
-
         self.config_fname = self.google_path + 'settings.ini'
         if not isfile(self.config_fname):
-            self.logger.info("config file doesn't exist. Creating...")
             self.create_config_file()
         self.config = self.load_config()
-        self.rtp_log_leve = self.config['rtp']['log_level']
+        self.rtp_log_level = self.config['rtp']['log_level']
         self.rtp_allow_dupes = bool(self.config['rtp']['allow_duplicate_bills'])
         self.sql_log_level = self.config['sql']['log_level']
         self.sql_db_fname = self.google_path + self.config['sql']['db_file_name']
         self.pdf_log_level = self.config['pdf']['log_level']
         self.pdf_docx_template = self.google_path + self.config['pdf']['docx_template']
 
+        self.mail_log_level = self.config['email']['log_level']
+        self.mail_user = self.config['email']['user']
+        self.mail_pswd = self.config['email']['pswd']
+        self.mail_server = self.config['email']['server']
+        self.mail_port = self.config['email']['port']
+        self.mail_msg = self.config['email']['msg_body']
+
         self.logger_fname = self.google_path + 'rtp_log.txt'
-        self.logger = create_logger(self.logger_fname, 'DEBUG', "rtp_log")
+        self.logger = create_logger(self.logger_fname, self.rtp_log_level, "rtp_log")
         if not isfile(self.sql_db_fname):
             self.critical_stop("Something has gone very wrong! db file doesn't exist!")
         self.logger.debug("Run Time Properties are initialized")
@@ -41,7 +46,7 @@ class RunTimeParams:
         config['rtp'] = {'log_level': 'DEBUG'}
         config['sql'] = {'log_level': 'DEBUG',  'db_file_name': 'billing.sqlite'}
         config['pdf'] = {'log_level': 'DEBUG', 'docx_template': 'billing_template.docx'}
-        config['email'] = {'log_level': 'DEBUG', 'email_user': 'MTWallets@outlook.com',
+        config['email_addr'] = {'log_level': 'DEBUG', 'email_user': 'MTWallets@outlook.com',
                            'email_pswd': 'MTnoreply430', 'server': 'smtp-mail.outlook.com',
                            'port': '587', 'msg_body': 'Please see the attached rent bill. E-transfers or questions may be sent to peter.v@live.ca'}
 
@@ -83,7 +88,7 @@ class Tenant:
     def __init__(self, id: int = -1, email: str = '', name: str = '', charge_room: float = 0.0, charge_internet: float = 0.0,
                  charge_gas: float = 0.0, charge_electricity: float = 0.0, charge_other: float = 0.0, charge_total: float = 0.0):
         self.id = id
-        self.email = email
+        self.email_addr = email
         self.name = name
         self.charge_room = charge_room
         self.charge_internet = charge_internet
@@ -96,18 +101,29 @@ class Tenant:
         self.memo_electricity = ''
         self.memo_other = ''
         self.pdf = None
+        self.pdf_short_name = None
         self.docx = None
+        self.email_msg = None
 
     def update_total(self):
         self.charge_total = round((self.charge_room + self.charge_internet + self.charge_gas + self.charge_electricity + self.charge_other), 2)
 
 
 class UtilityBill:
-    def __init__(self, label: str, amount: int, tenants: List[int], memo: str = ''):
+    def __init__(self, label: str, amount: int, tenants: List[int],month: int, year: int, memo: str = ''):
         self.label = label
         self.amount = amount
+        self.month = month
+        self.year = year
         self.tenants = tenants
         self.memo = memo
+
+
+def remove_tenant_0(tl: List[Tenant]):
+    """ Removes tenant 0 from the list. Used to prevent house owner from being emailed a bill. """
+    for t in tl:
+        if t.id == 0:
+            tl.remove(t)
 
 
 def get_google_drive_path():

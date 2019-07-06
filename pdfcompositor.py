@@ -6,6 +6,9 @@ import calendar
 import datetime
 import comtypes.client
 
+from genericpath import isfile
+from os import remove
+
 
 class PdfCompositor:
     def __init__(self, rtp: RunTimeParams):
@@ -13,7 +16,7 @@ class PdfCompositor:
         self.logger_fname = rtp.google_path + 'pdf_log.txt'
         self.logger = create_logger(self.logger_fname, self.rtp.pdf_log_level, "pdf_log")
 
-    def format_docx_name(self, t: Tenant, extension: str):
+    def format_file_name(self, t: Tenant, extension: str):
         return "{}s rent for {} {}.{}".format(t.name, calendar.month_name[self.rtp.month], self.rtp.year, extension)
 
     def compose_bills(self, tl: List[Tenant]):
@@ -36,7 +39,9 @@ class PdfCompositor:
                          memo_other=format_values(t.memo_other),
                          )
 
-            docx = self.rtp.google_path + self.format_docx_name(t, "docx")
+            docx = self.rtp.google_path + self.format_file_name(t, "docx")
+            if isfile(docx):
+                remove(docx)
             t_bill.write(docx)
             t.docx = docx
             self.logger.debug("Created docx file: {}".format(docx))
@@ -47,9 +52,10 @@ class PdfCompositor:
         word = comtypes.client.CreateObject('Word.Application')
         for t in tl:
             docx = t.docx
-            pdf = self.rtp.google_path + self.format_docx_name(t, "pdf")
+            t.pdf = self.rtp.google_path + self.format_file_name(t, "pdf")
+            t.pdf_short_name = self.format_file_name(t, "pdf")
             doc = word.Documents.Open(docx)
-            doc.SaveAs(pdf, FileFormat=wdFormatPDF)
+            doc.SaveAs(t.pdf, FileFormat=wdFormatPDF)
             doc.Close()
-            self.logger.debug("Created pdf file: {}".format(pdf))
+            self.logger.debug("Created pdf file: {}".format(t.pdf))
         word.Quit()

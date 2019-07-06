@@ -31,10 +31,10 @@ class SqlInterface:
             tenant = Tenant()
             tenant.id = row[0]
             tenant.name = row[1]
-            tenant.email = row[2]
+            tenant.email_addr = row[2]
             tenant.charge_room = row[4]
             tl.append(tenant)
-            self.logger.info("Tenant found: {}, ID: {}, email: {}".format(tenant.name, tenant.id, tenant.email))
+            self.logger.info("Tenant found: {}, ID: {}, email_addr: {}".format(tenant.name, tenant.id, tenant.email_addr))
         return tl
 
     def get_utility_bills(self, ubl: List[UtilityBill]):
@@ -43,6 +43,8 @@ class SqlInterface:
         for row in self.sql_curr:
             label = row[0]
             amount = row[1]
+            month = row[2]
+            year = row[3]
             memo = row[5]
             if memo is None:
                 memo = ''
@@ -57,7 +59,7 @@ class SqlInterface:
                     self.logger.critical("Value error in get_utility_bills, bad tenant string: {}".format(tenants_str))
                     self.rtp.critical_stop("Stopped by sql.get_utility_bills() for ValueError")
 
-            ub = UtilityBill(label, amount, tenants, memo)
+            ub = UtilityBill(label, amount, tenants, month, year, memo)
             ubl.append(ub)
             self.logger.info("Utility Bill found: {} for {} split between tenants: {}".format(label, amount, tenants_str))
 
@@ -81,6 +83,7 @@ class SqlInterface:
             tenant.update_total()
 
     def add_bill(self, bill: UtilityBill, tenant: Tenant):
+        # TODO: Add support for multiple bills of the same type in a month! Should be cumulative!
         try:
             count = len(bill.tenants)
             if bill.label == "electricity":
@@ -109,15 +112,50 @@ class SqlInterface:
             self.logger.critical("TypeError in sql.add_bill(): {}".format(vars(bill)))
             self.rtp.critical_stop("Stopped by TypeError in sql.add_bill()")
 
-    def create_tenant_bills(self, tl: List[Tenant]):
+    def save_tenant_bills(self, tl: List[Tenant]):
         for t in tl:
             # The 0 in the argument list is for "paid = false"
-            self.sql_curr.execute("INSERT INTO tenant_bills VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                                  [t.id, t.name, self.rtp.month, self.rtp.year, 0,
-                                   t.charge_room, t.charge_internet, t.charge_electricity, t.charge_gas, t.charge_other, t.charge_total,
-                                   t.memo_internet, t.memo_gas, t.memo_electricity, t.memo_other])
+            try:
+                self.sql_curr.execute("INSERT INTO tenant_bills VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                                      [t.id, t.name, self.rtp.month, self.rtp.year, 0,
+                                       t.charge_room, t.charge_internet, t.charge_electricity, t.charge_gas, t.charge_other, t.charge_total,
+                                       t.memo_internet, t.memo_gas, t.memo_electricity, t.memo_other])
+            except sqlite3.IntegrityError:
+                self.logger.critical("Duplicate bills in save_tenant_bills(): {}".format(vars(t)))
+                self.rtp.critical_stop("Stopped by sql.save_tenant_bills()")
+
             self.sql_conn.commit()
 
     def print_cursor(self):
         for row in self.sql_curr:
             print(row)
+
+    def update_tenant_bill(self, t: Tenant):
+        self.sql_curr.execute("REPLACE INTO tenant_bills VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                              [t.id, t.name, self.rtp.month, self.rtp.year, 0,
+                               t.charge_room, t.charge_internet, t.charge_electricity, t.charge_gas, t.charge_other, t.charge_total,
+                               t.memo_internet, t.memo_gas, t.memo_electricity, t.memo_other])
+
+    def insert_utility_bills(self, ubl: List[UtilityBill]):
+        """ Insert bills in the table. Will check for duplicates first, and warn the user if found. """
+        for ub in ubl:
+            tenant_str = self.tenants_list_to_str(ub.tenants)
+            self.sql_curr.execute("SELECT * from utility_bills WHERE (year IS ?) and (month is ?) and (label IS ?)", [ub.year, ub.month, ub.label])
+            if len(self.sql_curr.fetchall()) > 0:
+                print("Duplicate utility bill!")
+            else:
+                self.sql_curr.execute("INSERT INTO utility_bills VALUES (?,?,?,?,?,?)", [ub.label, ub.amount, ub.month, ub.year, tenant_str, ub.memo])
+            self.sql_conn.commit()
+
+    @staticmethod
+    def tenants_list_to_str(t_list: List[int]):
+        """ Converts a list of integers into an SQL friendly tenant string """
+        t_str = ''
+        first = True
+        for t in t_list:
+            if first:
+                t_str = t_str + str(t)
+                first = False
+            else:
+                t_str = t_str + ',' + str(t)
+        return t_str

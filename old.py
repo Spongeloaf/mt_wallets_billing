@@ -19,7 +19,7 @@ def prepare_bill(tenant_num):
     ###################      CONTINUE WORK HERE!!!!    #################
     # You were fixing all these properties into an object. You also need a global parameters object with billing strings and sheets and such.
 
-    tenant.email = wb.worksheets[1].cell(column=3, row=tenant_num).value  # assign a tenant email
+    tenant.email = wb.worksheets[1].cell(column=3, row=tenant_num).value  # assign a tenant email_addr
     tenant.name = format_values(wb[sheets[1]].cell(column=2, row=tenant_num).value)
     tenant.roomsheet = wb.worksheets[1].cell(column=1, row=tenant_num).value  # assign a tenant room number based on each tenants row in the sheet.
     tenant.date = format_values(billingDate.strftime('%d %B %Y'))
