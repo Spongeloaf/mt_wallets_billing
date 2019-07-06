@@ -119,6 +119,64 @@ class UtilityBill:
         self.memo = memo
 
 
+class Menu:
+    def __init__(self, prompt: str, funcs: List, loop: bool):
+        """ Creates a cmd prompt menu
+        The first selection is always the default if nothing is entered. """
+        self.prompt = prompt
+        self.funcs = funcs
+        self.max_choice = len(funcs) - 1
+        self.selection = -1
+        self.exit = False
+        self.is_loop = loop
+
+    def run(self):
+        """ Gets a selection and runs the the function by slicing the func list """
+        while self.is_loop:
+            print(self.prompt)
+            while True:
+                self.selection = input("")
+                if self.selection == '':
+                    self.selection = 1
+                try:
+                    # selection is int. Subtract one for slicing func list.
+                    self.selection = int(self.selection) - 1
+                    if self.selection_is_valid():
+                        break
+                except ValueError:
+                    if self.selection == '*':
+                        return
+                print("Invalid selection. Please tyr again.")
+            self.funcs[self.selection]()
+            print("1 to enter another, 2 to quit")
+            self.selection = input("")
+            if self.selection == '2':
+                break
+            if self.selection == '1':
+                continue
+                print("Invalid selection. Please tyr again.")
+
+    def selection_is_valid(self):
+        """ Returns True if a selection is invalid """
+        if self.selection < 0:
+            return False
+        if self.selection > self.max_choice:
+            return False
+        return True
+
+
+def func_1():
+    print("func 1")
+
+
+def func_2():
+    print("func 2")
+
+
+def func_3():
+    print("func 3")
+
+
 def remove_tenant_0(tl: List[Tenant]):
     """ Removes tenant 0 from the list. Used to prevent house owner from being emailed a bill. """
     for t in tl:
