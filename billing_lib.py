@@ -120,47 +120,60 @@ class UtilityBill:
 
 
 class Menu:
-    def __init__(self, prompt: str, funcs: List, loop: bool):
+    def __init__(self, prompt: str, funcs: List, loop: bool = False, loop_prompt: str = 'LOOP_PROMPT'):
         """ Creates a cmd prompt menu
         The first selection is always the default if nothing is entered. """
         self.prompt = prompt
+        self.loop_prompt = loop_prompt
         self.funcs = funcs
         self.max_choice = len(funcs) - 1
-        self.selection = -1
+        self.selection = 0
         self.exit = False
         self.is_loop = loop
 
     def run(self):
         """ Gets a selection and runs the the function by slicing the func list """
-        while self.is_loop:
+        while True:
             print(self.prompt)
-            while True:
-                self.selection = input("")
-                if self.selection == '':
-                    self.selection = 1
-                try:
-                    # selection is int. Subtract one for slicing func list.
-                    self.selection = int(self.selection) - 1
-                    if self.selection_is_valid():
-                        break
-                except ValueError:
-                    if self.selection == '*':
-                        return
-                print("Invalid selection. Please tyr again.")
-            self.funcs[self.selection]()
-            print("1 to enter another, 2 to quit")
-            self.selection = input("")
-            if self.selection == '2':
-                break
-            if self.selection == '1':
-                continue
-                print("Invalid selection. Please tyr again.")
+            self.get_input(0, self.max_choice)
 
-    def selection_is_valid(self):
+            if self.selection == '*':
+                return
+
+            self.funcs[self.selection]()
+
+            if self.is_loop:
+                print(self.loop_prompt)
+                self.get_input(0, 1)
+                if self.selection == 0:
+                    continue
+                if self.selection == 1:
+                    return
+                if self.selection == '*':
+                    return
+
+    def get_input(self, lower: int, upper: int):
+        """ Gets an input from cmd prompt """
+        while True:
+            self.selection = input("")
+            if self.selection == '':
+                self.selection = 1
+            try:
+                # selection is int. Subtract one for slicing func list.
+                self.selection = int(self.selection) - 1
+                if self.selection_is_valid(lower, upper):
+                    break
+            except ValueError:
+                if self.selection == '*':
+                    self.exit = True
+                    return
+            print("Invalid selection. Please tyr again.")
+
+    def selection_is_valid(self, lower: int, upper: int):
         """ Returns True if a selection is invalid """
-        if self.selection < 0:
+        if self.selection < lower:
             return False
-        if self.selection > self.max_choice:
+        if self.selection > upper:
             return False
         return True
 
