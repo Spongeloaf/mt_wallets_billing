@@ -16,13 +16,13 @@ class PdfCompositor:
         self.logger_fname = rtp.google_path + 'pdf_log.txt'
         self.logger = create_logger(self.logger_fname, self.rtp.pdf_log_level, "pdf_log")
 
-    def format_file_name(self, t: Tenant, extension: str):
+    def __format_file_name(self, t: Tenant, extension: str):
         return "{}s rent for {} {}.{}".format(t.name, calendar.month_name[self.rtp.month], self.rtp.year, extension)
 
-    def compose_bills(self, tl: List[Tenant]):
+    def compose_bills(self):
         """ Compose a single bill for a tenant, save it to disk.
         returns a string containing the path to the saved file. """
-        for t in tl:
+        for t in self.rtp.tl:
             t_bill = MailMerge(self.rtp.pdf_docx_template)
             t_bill.merge(name=format_values(t.name),
                          month_year=format_values("{} {}".format(calendar.month_name[self.rtp.month], self.rtp.year)),
@@ -39,23 +39,23 @@ class PdfCompositor:
                          memo_other=format_values(t.memo_other),
                          )
 
-            docx = self.rtp.google_path + self.format_file_name(t, "docx")
+            docx = self.rtp.google_path + self.__format_file_name(t, "docx")
             if isfile(docx):
                 remove(docx)
             t_bill.write(docx)
             t.docx = docx
             self.logger.debug("Created docx file: {}".format(docx))
 
-    def docx_to_pdf(self, tl: List[Tenant]):
+    def docx_to_pdf(self,):
         """ Converts the docx files in a tenant list to pdf """
-        wdFormatPDF = 17
+        wd_format_pdf = 17
         word = comtypes.client.CreateObject('Word.Application')
-        for t in tl:
+        for t in self.rtp.tl:
             docx = t.docx
-            t.pdf = self.rtp.google_path + self.format_file_name(t, "pdf")
-            t.pdf_short_name = self.format_file_name(t, "pdf")
+            t.pdf = self.rtp.google_path + self.__format_file_name(t, "pdf")
+            t.pdf_short_name = self.__format_file_name(t, "pdf")
             doc = word.Documents.Open(docx)
-            doc.SaveAs(t.pdf, FileFormat=wdFormatPDF)
+            doc.SaveAs(t.pdf, FileFormat=wd_format_pdf)
             doc.Close()
             self.logger.debug("Created pdf file: {}".format(t.pdf))
         word.Quit()

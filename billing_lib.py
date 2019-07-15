@@ -7,12 +7,11 @@ import configparser
 from sys import exit
 
 
-
 class RunTimeParams:
     def __init__(self):
-        self.prepare = True
-        self.compose = True
-        self.send = True
+        self.prepare = False
+        self.compose = False
+        self.send = False
         self.month = ''
         self.year = ''
         self.google_path = get_google_drive_path()
@@ -40,6 +39,9 @@ class RunTimeParams:
             self.critical_stop("Something has gone very wrong! db file doesn't exist!")
         self.logger.debug("Run Time Properties are initialized")
 
+        self.ubl: List[UtilityBill] = []
+        self.tl: List[Tenant] = []
+
     def create_config_file(self):
         """ Creates a new, default, server config file. """
         config = configparser.ConfigParser()
@@ -64,7 +66,7 @@ class RunTimeParams:
         except KeyError:
             self.critical_stop('Config file KeyError. Check config file for missing values!')
 
-    def input_bill_date(self):
+    def billing_date_user_input(self):
         m = input("Please input month, leave blank for current:\n")
         y = input("Please input year, leave blank for current:\n")
 
@@ -81,6 +83,10 @@ class RunTimeParams:
         self.month = m
         self.year = y
 
+    def billing_date_use_current(self):
+        self.month = datetime.date.today().month
+        self.year = datetime.date.today().year
+
     def print_bill_date(self):
         print("Year: {}, Month: {}\n".format(self.year, self.month))
 
@@ -88,19 +94,23 @@ class RunTimeParams:
         self.logger.critical("Program halted for reason: {}".format(message))
         exit(1)
 
+    def print_tenant_list(self):
+        print("\nTenant list for this session:")
+        for t in self.tl:
+            t.print()
+
 
 class Tenant:
-    def __init__(self, id: int = -1, email: str = '', name: str = '', charge_room: float = 0.0, charge_internet: float = 0.0,
-                 charge_gas: float = 0.0, charge_electricity: float = 0.0, charge_other: float = 0.0, charge_total: float = 0.0):
-        self.id = id
-        self.email_addr = email
-        self.name = name
-        self.charge_room = charge_room
-        self.charge_internet = charge_internet
-        self.charge_gas = charge_gas
-        self.charge_electricity = charge_electricity
-        self.charge_other = charge_other
-        self.charge_total = charge_total
+    def __init__(self):
+        self.id = 0
+        self.email_addr = ''
+        self.name = ''
+        self.charge_room = ''
+        self.charge_internet = 0
+        self.charge_gas = 0
+        self.charge_electricity = 0
+        self.charge_other = 0
+        self.charge_total = 0
         self.memo_internet = ''
         self.memo_gas = ''
         self.memo_electricity = ''
@@ -113,6 +123,9 @@ class Tenant:
     def update_total(self):
         self.charge_total = round((self.charge_room + self.charge_internet + self.charge_gas + self.charge_electricity + self.charge_other), 2)
 
+    def print(self):
+        print('{} | {:28} | {:24}'.format(self.id, self.name, self.email_addr))
+
 
 class UtilityBill:
     def __init__(self, label: str, amount: int, tenants: List[int],month: int, year: int, memo: str = ''):
@@ -124,22 +137,19 @@ class UtilityBill:
         self.memo = memo
 
 
-
-
-
-
-
-
 def func_1():
     print("func 1")
+    input("Press enter to continue")
 
 
 def func_2():
     print("func 2")
+    input("Press enter to continue")
 
 
 def func_3():
     print("func 3")
+    input("Press enter to continue")
 
 
 def remove_tenant_0(tl: List[Tenant]):
@@ -189,24 +199,19 @@ def create_logger(log_file_const, log_level='DEBUG', log_name='a_logger_has_no_n
     fh = logging.FileHandler(log_file_const, mode='w')      # file handler object for logger
     ch = logging.StreamHandler()                            # create console handler
 
-    ch.setLevel(logging.DEBUG)                              # default log levels set to debug in case config fails
+    ch.setLevel(logging.ERROR)                              # default log levels set to debug in case config fails
     fh.setLevel(logging.DEBUG)                              # default log levels set to debug in case config fails
 
     # set levels from config file
     if log_level == 'DEBUG':
-        ch.setLevel(logging.DEBUG)
         fh.setLevel(logging.DEBUG)
     elif log_level == 'INFO':
-        ch.setLevel(logging.INFO)
         fh.setLevel(logging.INFO)
     elif log_level == 'WARNING':
-        ch.setLevel(logging.WARNING)
         fh.setLevel(logging.WARNING)
     elif log_level == 'ERROR':
-        ch.setLevel(logging.ERROR)
         fh.setLevel(logging.ERROR)
     elif log_level == 'CRITICAL':
-        ch.setLevel(logging.CRITICAL)
         fh.setLevel(logging.CRITICAL)
     else:
         log.critical('Bad logger level argument. reverting to "debug" logger')

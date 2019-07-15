@@ -13,31 +13,32 @@ class SqlInterface:
         self.sql_conn = sqlite3.connect(self.rtp.sql_db_fname)
         self.sql_curr = self.sql_conn.cursor()
 
-    def get_tenants_by_date(self, month: int, year: int):
-        # TODO: MAKE THIS WORK!
-        # """ retrieve list of tenants for a specific date/year """
-        # self.sql_curr.execute("SELECT * FROM tenants WHERE is_current IS 1")  <------- MODIFY THIS STATEMENT, THE REST SHOULD BE GOOD
-        # return self.sql_tenant_to_obj()
-        pass
+    def get_tenants_by_date(self):
+        """ retrieve list of tenants for a specific date/year """
+        self.sql_curr.execute("SELECT * FROM tenants WHERE ? BETWEEN year_in AND "
+                              "CASE"
+                              " WHEN year_out is NULL THEN 9999"
+                              " ELSE year_out "
+                              "END", [self.rtp.year])
+        self.sql_tenants_to_list()
 
-    def get_active_tenants(self):
+    def get_tenants_by_active(self):
         """ retrieve list of active tenants """
         self.sql_curr.execute("SELECT * FROM tenants WHERE is_current IS 1")
-        return self.sql_tenant_to_obj()
+        self.sql_tenants_to_list()
 
-    def sql_tenant_to_obj(self):
-        tl = []
+    def sql_tenants_to_list(self):
+        self.rtp.tl = []
         for row in self.sql_curr:
             tenant = Tenant()
             tenant.id = row[0]
             tenant.name = row[1]
             tenant.email_addr = row[2]
             tenant.charge_room = row[4]
-            tl.append(tenant)
+            self.rtp.tl.append(tenant)
             self.logger.info("Tenant found: {}, ID: {}, email_addr: {}".format(tenant.name, tenant.id, tenant.email_addr))
-        return tl
 
-    def get_utility_bills(self, ubl: List[UtilityBill]):
+    def get_utility_bills(self):
         """ return bills for month specified """
         self.sql_curr.execute("SELECT * from utility_bills WHERE (year IS ?) and (month is ?)", [self.rtp.year, self.rtp.month])
         for row in self.sql_curr:
@@ -60,29 +61,29 @@ class SqlInterface:
                     self.rtp.critical_stop("Stopped by sql.get_utility_bills() for ValueError")
 
             ub = UtilityBill(label, amount, tenants, month, year, memo)
-            ubl.append(ub)
+            self.rtp.ubl.append(ub)
             self.logger.info("Utility Bill found: {} for {} split between tenants: {}".format(label, amount, tenants_str))
 
-    def check_utility_bill_tenants(self, ubl: List[UtilityBill], tl: List[Tenant]):
+    def check_utility_bill_tenants(self):
         id_list = []
-        for t in tl:
+        for t in self.rtp.tl:
             id_list.append(t.id)
 
-        for bill in ubl:
+        for bill in self.rtp.ubl:
             for tenant in bill.tenants:
                 if tenant not in id_list:
                     self.logger.critical("A bill is targeted for a non-active tenant in check_utility_bill_tenants: {}".format(tenant))
                     self.rtp.critical_stop("Stopped by sql.check_utility_bill_tenants for invalid tenant string")
 
-    def prepare_tennant_bills(self, ubl: List[UtilityBill], tl: List[Tenant]):
-        for tenant in tl:
-            for bill in ubl:
+    def prepare_tennant_bills(self):
+        for tenant in self.rtp.tl:
+            for bill in self.rtp.ubl:
                 for i in bill.tenants:
                     if tenant.id == i:
-                        self.add_bill(bill, tenant)
+                        self.__add_bill(bill, tenant)
             tenant.update_total()
 
-    def add_bill(self, bill: UtilityBill, tenant: Tenant):
+    def __add_bill(self, bill: UtilityBill, tenant: Tenant):
         # TODO: Add support for multiple bills of the same type in a month! Should be cumulative!
         try:
             count = len(bill.tenants)
@@ -106,14 +107,14 @@ class SqlInterface:
                 tenant.memo_other = bill.memo
                 return
 
-            self.logger.critical("Bad bill label in sql.add_bill(): {}".format(vars(bill)))
-            self.rtp.critical_stop("Stopped by bad bill label in sql.add_bill()")
+            self.logger.critical("Bad bill label in sql.__add_bill(): {}".format(vars(bill)))
+            self.rtp.critical_stop("Stopped by bad bill label in sql.__add_bill()")
         except TypeError:
-            self.logger.critical("TypeError in sql.add_bill(): {}".format(vars(bill)))
-            self.rtp.critical_stop("Stopped by TypeError in sql.add_bill()")
+            self.logger.critical("TypeError in sql.__add_bill(): {}".format(vars(bill)))
+            self.rtp.critical_stop("Stopped by TypeError in sql.__add_bill()")
 
-    def save_tenant_bills(self, tl: List[Tenant]):
-        for t in tl:
+    def save_tenant_bills(self):
+        for t in self.rtp.tl:
             # The 0 in the argument list is for "paid = false"
             try:
                 self.sql_curr.execute("INSERT INTO tenant_bills VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
@@ -129,16 +130,17 @@ class SqlInterface:
     def print_cursor(self):
         for row in self.sql_curr:
             print(row)
+        input("Press Enter to continue")
 
-    def update_tenant_bill(self, t: Tenant):
+    def __update_tenant_bill(self, t: Tenant):
         self.sql_curr.execute("REPLACE INTO tenant_bills VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                               [t.id, t.name, self.rtp.month, self.rtp.year, 0,
                                t.charge_room, t.charge_internet, t.charge_electricity, t.charge_gas, t.charge_other, t.charge_total,
                                t.memo_internet, t.memo_gas, t.memo_electricity, t.memo_other])
 
-    def insert_utility_bills(self, ubl: List[UtilityBill]):
+    def insert_utility_bills(self):
         """ Insert bills in the table. Will check for duplicates first, and warn the user if found. """
-        for ub in ubl:
+        for ub in self.rtp.ubl:
             tenant_str = self.tenants_list_to_str(ub.tenants)
             self.sql_curr.execute("SELECT * from utility_bills WHERE (year IS ?) and (month is ?) and (label IS ?)", [ub.year, ub.month, ub.label])
             if len(self.sql_curr.fetchall()) > 0:
