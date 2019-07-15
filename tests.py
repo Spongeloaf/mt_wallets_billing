@@ -1,13 +1,13 @@
 from billing_lib import *
-import pdfcompositor
-import sqlinterface
+import pdf_compositor
+import sql_interface
 from typing import List
 import time
-import mailer
+import bill_mailer
 
 
 # rtp = RunTimeParams()
-# rtp.get_bill_date()
+# rtp.input_bill_date()
 # sql = sqlinterface.SqlInterface(rtp)
 # tl = sql.get_active_tenants()
 # ubl: List[UtilityBill] = []
@@ -18,12 +18,12 @@ import mailer
 
 # init
 rtp = RunTimeParams()
-sql = sqlinterface.SqlInterface(rtp)
-pdf = pdfcompositor.PdfCompositor(rtp)
-mail = mailer.Mailer(rtp)
+sql = sql_interface.SqlInterface(rtp)
+pdf = pdf_compositor.PdfCompositor(rtp)
+mail = bill_mailer.Mailer(rtp)
 ubl: List[UtilityBill] = []
 
-rtp.get_bill_date()
+rtp.input_bill_date()
 tl = sql.get_active_tenants()
 sql.get_utility_bills(ubl)
 sql.check_utility_bill_tenants(ubl, tl)
