@@ -95,7 +95,7 @@ class RunTimeParams:
         exit(1)
 
     def print_tenant_list(self):
-        print("\nTenant list for this session:")
+        print("\nTenant list for {} {}".format(self.month, self.year))
         for t in self.tl:
             t.print()
 

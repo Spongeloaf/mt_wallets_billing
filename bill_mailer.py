@@ -47,3 +47,7 @@ class Mailer:
             body = t.email_msg.as_string()
             self.mail_server.sendmail(self.rtp.mail_user, t.email_addr, body)
         self.mail_server.quit()
+
+    def send_email_to_landord(self):
+        # TODO: Implement me!
+        print("TODO: Implement me!")

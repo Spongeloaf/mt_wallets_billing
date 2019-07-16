@@ -19,7 +19,7 @@ class PdfCompositor:
     def __format_file_name(self, t: Tenant, extension: str):
         return "{}s rent for {} {}.{}".format(t.name, calendar.month_name[self.rtp.month], self.rtp.year, extension)
 
-    def compose_bills(self):
+    def tenant_bills_to_docx(self):
         """ Compose a single bill for a tenant, save it to disk.
         returns a string containing the path to the saved file. """
         for t in self.rtp.tl:
