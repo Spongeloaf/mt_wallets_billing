@@ -5,21 +5,27 @@ import logging
 from sys import exit
 import configparser
 from sys import exit
+from colorama import Fore
+from colorama import init as color_init
 
 
 class RunTimeParams:
     def __init__(self):
+        color_init()
         self.prepare = False
         self.compose = False
         self.send = False
         self.month = ''
         self.year = ''
+        self.duplicates_found = False
         self.google_path = get_google_drive_path()
         self.config_fname = self.google_path + 'settings.ini'
         if not isfile(self.config_fname):
             self.create_config_file()
         self.config = self.load_config()
         self.rtp_log_level = self.config['rtp']['log_level']
+        self.allow_duplicate_bills = bool(self.config['rtp']['allow_duplicate_bills'])
+        self.bill_tenant_0 = bool(self.config['rtp']['bill_tenant_0'])
         self.rtp_allow_dupes = bool(self.config['rtp']['allow_duplicate_bills'])
         self.sql_log_level = self.config['sql']['log_level']
         self.sql_db_fname = self.google_path + self.config['sql']['db_file_name']
@@ -66,26 +72,16 @@ class RunTimeParams:
         except KeyError:
             self.critical_stop('Config file KeyError. Check config file for missing values!')
 
-    def billing_date_user_input(self):
-        m = input("Please input month, leave blank for current:\n")
-        y = input("Please input year, leave blank for current:\n")
-
-        if m == '':
-            m = datetime.date.today().month
-        if m is not int:
-            m = int(m)
-
-        if y == '':
-            y = datetime.date.today().year
-        if y is not int:
-            y = int(y)
-
-        self.month = m
-        self.year = y
-
     def billing_date_use_current(self):
         self.month = datetime.date.today().month
         self.year = datetime.date.today().year
+
+    def ub_tenant_list_from_tl(self):
+        for ub in self.ubl:
+            ub.tenants = []
+            for t in self.tl:
+                i = t.id
+                ub.tenants.append(i)
 
     def print_bill_date(self):
         print("Year: {}, Month: {}\n".format(self.year, self.month))
@@ -95,9 +91,25 @@ class RunTimeParams:
         exit(1)
 
     def print_tenant_list(self):
-        print("\nTenant list for {} {}".format(self.month, self.year))
+        print("\nTenant list for {} {}:".format(self.month, self.year))
         for t in self.tl:
             t.print()
+
+    def print_utility_bills(self):
+        print("\nUtility bill list for {} {}:".format(self.month, self.year))
+        print("\n" + Fore.BLUE + "{:12} | {:8} |{}".format("Label", "Amount", "Tenants") + Fore.RESET)
+        for ub in self.ubl:
+            ub.print()
+
+    def print_tenant_bills(self):
+        print("\nTenant list for {} {}:".format(self.month, self.year))
+        print("\n" + Fore.BLUE + "{:32} | {:11} | {:11} | {:11} | {:11} | {:11} | {:11}".format("Name", "Room", "Internet", "Electricity", "Gas", "Other", "Total") + Fore.RESET)
+        for t in self.tl:
+            print("{:32} | {:11} | {:11} | {:11} | {:11} | {:11} | {:11}".format(t.name, t.charge_room, t.charge_internet, t.charge_electricity, t.charge_gas, t.charge_other, t.charge_total))
+
+    @staticmethod
+    def print_error(s):
+        print(Fore.RED + s + Fore.RESET)
 
 
 class Tenant:
@@ -105,13 +117,17 @@ class Tenant:
         self.id = 0
         self.email_addr = ''
         self.name = ''
-        self.charge_room = ''
-        self.charge_internet = 0
-        self.charge_gas = 0
-        self.charge_electricity = 0
-        self.charge_other = 0
-        self.charge_total = 0
-        self.memo_internet = ''
+        self.year_in = -1
+        self.year_out = -1
+        self.month_in = -1
+        self.month_out = -1
+        self.charge_room = 0.0
+        self.charge_internet = 0.0
+        self.charge_gas = 0.0
+        self.charge_electricity = 0.0
+        self.charge_other = 0.0
+        self.charge_total = 0.0
+        self.memo_internet = 0.0
         self.memo_gas = ''
         self.memo_electricity = ''
         self.memo_other = ''
@@ -124,17 +140,23 @@ class Tenant:
         self.charge_total = round((self.charge_room + self.charge_internet + self.charge_gas + self.charge_electricity + self.charge_other), 2)
 
     def print(self):
-        print('{} | {:28} | {:24}'.format(self.id, self.name, self.email_addr))
+        print('{} | {:32} | {:24}'.format(self.id, self.name, self.email_addr))
 
 
 class UtilityBill:
-    def __init__(self, label: str, amount: int, tenants: List[int],month: int, year: int, memo: str = ''):
+    def __init__(self, label: str='', amount: float=0.0, tenants: List[int]=None, month: int=0, year: int=0, memo: str = ''):
         self.label = label
         self.amount = amount
         self.month = month
         self.year = year
         self.tenants = tenants
         self.memo = memo
+
+    def print(self):
+        string = ''
+        for t in self.tenants:
+            string += ' ' + str(t)
+        print('{:12} | {:8} |{}'.format(self.label, self.amount, string))
 
 
 def func_1():
@@ -232,3 +254,6 @@ def create_logger(log_file_const, log_level='DEBUG', log_name='a_logger_has_no_n
 def print_bills(tl: List[Tenant]):
     for t in tl:
         print(vars(t))
+
+
+

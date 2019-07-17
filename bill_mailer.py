@@ -20,6 +20,9 @@ class Mailer:
     def compose_email(self):
         """ Composes an email_addr for each tenant """
         for t in self.rtp.tl:
+            if not self.rtp.bill_tenant_0:
+                if t.id == 0:
+                    continue
             t.email_msg = MIMEMultipart()
             # Do we need this?
             t.email_msg['From'] = self.rtp.mail_user
@@ -44,10 +47,22 @@ class Mailer:
         """ Sends an email_addr to each tenant """
         self.mail_server.login(self.rtp.mail_user, self.rtp.mail_pswd)
         for t in self.rtp.tl:
+            if not self.rtp.bill_tenant_0:
+                if t.id == 0:
+                    continue
             body = t.email_msg.as_string()
             self.mail_server.sendmail(self.rtp.mail_user, t.email_addr, body)
         self.mail_server.quit()
 
-    def send_email_to_landord(self):
-        # TODO: Implement me!
-        print("TODO: Implement me!")
+    def email_to_landord(self):
+        """ Changes all email addresses to the address associated with tenant 0 """
+        email = ''
+        for t in self.rtp.tl:
+            if t.id == 0:
+                email = t.email_addr
+
+        if email == '':
+            self.rtp.critical_stop("Failed to find email address match in mail.email_to_landlord()")
+
+        for t in self.rtp.tl:
+            t.email_addr = email

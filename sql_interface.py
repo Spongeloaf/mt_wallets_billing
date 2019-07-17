@@ -15,19 +15,19 @@ class SqlInterface:
 
     # execute these in order to complete the billing cycle
     def get_tenants_by_date(self):
-        # TODO: Fix this so it checks months as well!
         """ retrieve list of tenants for a specific date/year """
-        self.sql_curr.execute("SELECT * FROM tenants WHERE ? BETWEEN year_in AND "
-                              "CASE"
-                              " WHEN year_out is NULL THEN 9999"
-                              " ELSE year_out "
-                              "END", [self.rtp.year])
+        self.sql_curr.execute("SELECT * FROM tenants WHERE ((? < year_out) or ((? == year_out) AND (? <= month_out))) AND ? >= year_in",
+                              [self.rtp.year, self.rtp.year, self.rtp.month, self.rtp.year])
         self.__sql_tenants_to_list()
+        if len(self.rtp.tl) == 0:
+            self.rtp.print_error("No tenants found for query!")
 
     def get_tenants_by_active(self):
         """ retrieve list of active tenants """
         self.sql_curr.execute("SELECT * FROM tenants WHERE is_current IS 1")
         self.__sql_tenants_to_list()
+        if len(self.rtp.tl) == 0:
+            self.rtp.print_error("No tenants found for query!")
 
     def get_utility_bills(self):
         """ return bills for month specified """
@@ -54,6 +54,8 @@ class SqlInterface:
             ub = UtilityBill(label, amount, tenants, month, year, memo)
             self.rtp.ubl.append(ub)
             self.logger.info("Utility Bill found: {} for {} split between tenants: {}".format(label, amount, tenants_str))
+        if len(self.rtp.ubl) == 0:
+            self.rtp.print_error("No utility bills found for query!")
 
     def check_utility_bill_tenants(self):
         id_list = []
@@ -77,10 +79,11 @@ class SqlInterface:
     def insert_utility_bills(self):
         """ Insert bills in the table. Will check for duplicates first, and warn the user if found. """
         for ub in self.rtp.ubl:
-            tenant_str = self.__tenants_list_to_str()
+            tenant_str = self.__tenants_list_to_str(ub)
             self.sql_curr.execute("SELECT * from utility_bills WHERE (year IS ?) and (month is ?) and (label IS ?)", [ub.year, ub.month, ub.label])
             if len(self.sql_curr.fetchall()) > 0:
-                print("Duplicate utility bill!")
+                self.rtp.print_error("Duplicate utility bill!")
+                self.rtp.duplicates_found = True
             else:
                 self.sql_curr.execute("INSERT INTO utility_bills VALUES (?,?,?,?,?,?)", [ub.label, ub.amount, ub.month, ub.year, tenant_str, ub.memo])
             self.sql_conn.commit()
@@ -100,18 +103,10 @@ class SqlInterface:
             self.sql_conn.commit()
 
     # Helper and printing functions
-    def print_utility_bills(self):
-        # Todo: Make this work!
-        print("TODO: make print_utility_bills work")
-
     def print_cursor(self):
         for row in self.sql_curr:
             print(row)
         input("Press Enter to continue")
-
-    def print_tenant_bills(self):
-        # TODO Implement me!
-        print("TODO: Implement print_tenant_bills")
 
     def load_tenant_bills(self):
         """ Loads tenant bills from SQL instead of generating them"""
@@ -134,6 +129,9 @@ class SqlInterface:
             tenant.charge_room = row[4]
             self.rtp.tl.append(tenant)
             self.logger.info("Tenant found: {}, ID: {}, email_addr: {}".format(tenant.name, tenant.id, tenant.email_addr))
+
+        if len(self.rtp.tl) == 0:
+            self.rtp.print_error("No tenants retrieved by query!")
 
     def __add_bill(self, bill: UtilityBill, tenant: Tenant):
         # TODO: Add support for multiple bills of the same type in a month! Should be cumulative!
@@ -165,11 +163,12 @@ class SqlInterface:
             self.logger.critical("TypeError in sql.__add_bill(): {}".format(vars(bill)))
             self.rtp.critical_stop("Stopped by TypeError in sql.__add_bill()")
 
-    def __tenants_list_to_str(self):
+    @staticmethod
+    def __tenants_list_to_str(ub: UtilityBill):
         """ Converts a list of integers into an SQL friendly tenant string """
         t_str = ''
         first = True
-        for t in self.rtp.tl:
+        for t in ub.tenants:
             if first:
                 t_str = t_str + str(t)
                 first = False

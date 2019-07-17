@@ -45,6 +45,30 @@ Would you like to compose and send emails?
 1: Compose and send
 2: Compose and send all to landlord""")
 
+utility_bill_type = textwrap.dedent("""\
+Add utility bills for billing date {} {}.
+Please choose a type of bill:
+1: Electricity
+2: Gas
+3: Internet
+4: Other""")
+
+utility_bill_amount = textwrap.dedent("""\
+Please enter an amount: """)
+
+utility_bill_memo = textwrap.dedent("""\
+Enter a memo if you wish: """)
+
+utility_bill_end = textwrap.dedent("""\
+Would you like to add another utility bill?
+1: Yes
+0: No - Return to main menu
+""")
+
+check_utility_bill_list = textwrap.dedent("""\
+Review the utility bill list and billing date. 
+1: Accept
+0: Abort""")
 
 dummy = textwrap.dedent("""\
 """)

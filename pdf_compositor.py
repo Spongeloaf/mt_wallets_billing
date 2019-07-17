@@ -23,6 +23,9 @@ class PdfCompositor:
         """ Compose a single bill for a tenant, save it to disk.
         returns a string containing the path to the saved file. """
         for t in self.rtp.tl:
+            if not self.rtp.bill_tenant_0:
+                if t.id == 0:
+                    continue
             t_bill = MailMerge(self.rtp.pdf_docx_template)
             t_bill.merge(name=format_values(t.name),
                          month_year=format_values("{} {}".format(calendar.month_name[self.rtp.month], self.rtp.year)),
@@ -38,7 +41,6 @@ class PdfCompositor:
                          memo_electricity=format_values(t.memo_electricity),
                          memo_other=format_values(t.memo_other),
                          )
-
             docx = self.rtp.google_path + self.__format_file_name(t, "docx")
             if isfile(docx):
                 remove(docx)
@@ -51,6 +53,9 @@ class PdfCompositor:
         wd_format_pdf = 17
         word = comtypes.client.CreateObject('Word.Application')
         for t in self.rtp.tl:
+            if not self.rtp.bill_tenant_0:
+                if t.id == 0:
+                    continue
             docx = t.docx
             t.pdf = self.rtp.google_path + self.__format_file_name(t, "pdf")
             t.pdf_short_name = self.__format_file_name(t, "pdf")
