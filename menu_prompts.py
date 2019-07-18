@@ -5,13 +5,13 @@ MTWallets Billing Suite
 Type a number and press enter to navigate. Just pressing enter selects option 1.
 1: Tenant Bill Receivables
 2: Add utility bills
-3: Prepare tenant bills
+3: Prepare tenant_id bills
 0: Abort""")
 
 prepare_tenant_bills = textwrap.dedent("""\
-Would you like to generate new tenant bills?
+Would you like to generate new tenant_id bills?
 1: Yes
-2: No - Skip and use existing tenant bills.
+2: No - Skip and use existing tenant_id bills.
 0: Abort""")
 
 prepare_tenant_bills_end = textwrap.dedent("""\
@@ -29,12 +29,12 @@ Please type an integer for the month. Alternatively, just press enter to select 
 You may enter 0, q, or * to exit.""")
 
 check_tenant_bill_list = textwrap.dedent("""\
-Review the tenant list and billing date. 
+Review the tenant_id list and billing date. 
 1: Accept
 0: Abort""")
 
 prepare_pdf = textwrap.dedent("""\
-Would you like to prepare DOCX and/or PDF files of the tenant bills?
+Would you like to prepare DOCX and/or PDF files of the tenant_id bills?
 1: Prepare PDFs
 2: Prepare DOCX only
 3: No - Skip and use existing files

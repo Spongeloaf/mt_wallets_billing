@@ -43,7 +43,10 @@ class Menu:
                 self.prepare_tenant_bills()
 
     def tenant_bill_recievables(self):
-        pass
+        # get unpaid bills
+        self.sql.load_tenant_bills()
+
+        # for bill in bill list, mark as paid
 
     def add_utiility_bill(self):
         while True:
@@ -66,15 +69,13 @@ class Menu:
                 ub.month = selection
                 self.rtp.month = selection
 
-            # get tenant list, so we don't have to write tenant list strings ourselves.
+            # get tenant_id list, so we don't have to write tenant_id list strings ourselves.
             self.sql.get_tenants_by_date()
             self.rtp.print_tenant_list()
-            print(mp.check_tenant_bill_list)
+            self.prompt(mp.check_tenant_bill_list)
             selection = self.get_int(0, 1)
             if selection == 0:
                 return
-
-
 
             # Prevents typos by providing int options instead of user typing their own labels
             self.prompt(mp.utility_bill_type.format(self.rtp.month, self.rtp.year))
@@ -134,7 +135,7 @@ class Menu:
                 else:
                     self.rtp.month = selection
 
-                # prepare tenant list
+                # prepare tenant_id list
                 self.sql.get_tenants_by_date()
                 self.rtp.print_tenant_list()
                 print(mp.check_tenant_bill_list)
@@ -151,7 +152,7 @@ class Menu:
                 self.prompt("")
                 self.rtp.print_tenant_bills()
 
-                # confirm tenant bills
+                # confirm tenant_id bills
                 selection = self.get_int(0, 1)
                 if selection == 0:
                     return

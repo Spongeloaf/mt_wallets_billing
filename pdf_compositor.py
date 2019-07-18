@@ -20,14 +20,14 @@ class PdfCompositor:
         return "{}s rent for {} {}.{}".format(t.name, calendar.month_name[self.rtp.month], self.rtp.year, extension)
 
     def tenant_bills_to_docx(self):
-        """ Compose a single bill for a tenant, save it to disk.
+        """ Compose a single bill for a tenant_id, save it to disk.
         returns a string containing the path to the saved file. """
-        for t in self.rtp.tl:
+        for t in self.rtp.tbl:
             if not self.rtp.bill_tenant_0:
-                if t.id == 0:
+                if t.tenant_id == 0:
                     continue
             t_bill = MailMerge(self.rtp.pdf_docx_template)
-            t_bill.merge(name=format_values(t.name),
+            t_bill.merge(name=format_values(t.tenant_name),
                          month_year=format_values("{} {}".format(calendar.month_name[self.rtp.month], self.rtp.year)),
                          total=format_values(t.charge_total),
                          date=format_values(datetime.datetime.now().strftime('%Y %B %d')),
@@ -41,15 +41,15 @@ class PdfCompositor:
                          memo_electricity=format_values(t.memo_electricity),
                          memo_other=format_values(t.memo_other),
                          )
-            docx = self.rtp.google_path + self.__format_file_name(t, "docx")
+            docx = self.rtp.google_path + self.__format_file_name(t, "docx_long_name")
             if isfile(docx):
                 remove(docx)
             t_bill.write(docx)
             t.docx = docx
-            self.logger.debug("Created docx file: {}".format(docx))
+            self.logger.debug("Created docx_long_name file: {}".format(docx))
 
     def docx_to_pdf(self,):
-        """ Converts the docx files in a tenant list to pdf """
+        """ Converts the docx_long_name files in a tenant_id list to pdf_long_name """
         wd_format_pdf = 17
         word = comtypes.client.CreateObject('Word.Application')
         for t in self.rtp.tl:
@@ -57,10 +57,10 @@ class PdfCompositor:
                 if t.id == 0:
                     continue
             docx = t.docx
-            t.pdf = self.rtp.google_path + self.__format_file_name(t, "pdf")
-            t.pdf_short_name = self.__format_file_name(t, "pdf")
+            t.pdf = self.rtp.google_path + self.__format_file_name(t, "pdf_long_name")
+            t.pdf_short_name = self.__format_file_name(t, "pdf_long_name")
             doc = word.Documents.Open(docx)
             doc.SaveAs(t.pdf, FileFormat=wd_format_pdf)
             doc.Close()
-            self.logger.debug("Created pdf file: {}".format(t.pdf))
+            self.logger.debug("Created pdf_long_name file: {}".format(t.pdf))
         word.Quit()

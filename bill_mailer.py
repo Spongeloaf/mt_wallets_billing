@@ -18,7 +18,7 @@ class Mailer:
         self.mail_server.starttls()
 
     def compose_email(self):
-        """ Composes an email_addr for each tenant """
+        """ Composes an email_addr for each tenant_id """
         for t in self.rtp.tl:
             if not self.rtp.bill_tenant_0:
                 if t.id == 0:
@@ -44,7 +44,7 @@ class Mailer:
                 self.rtp.critical_stop("stopped by ValueError in mail.compose_mail")
 
     def send_email(self):
-        """ Sends an email_addr to each tenant """
+        """ Sends an email_addr to each tenant_id """
         self.mail_server.login(self.rtp.mail_user, self.rtp.mail_pswd)
         for t in self.rtp.tl:
             if not self.rtp.bill_tenant_0:
@@ -55,7 +55,7 @@ class Mailer:
         self.mail_server.quit()
 
     def email_to_landord(self):
-        """ Changes all email addresses to the address associated with tenant 0 """
+        """ Changes all email addresses to the address associated with tenant_id 0 """
         email = ''
         for t in self.rtp.tl:
             if t.id == 0:

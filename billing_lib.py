@@ -24,9 +24,8 @@ class RunTimeParams:
             self.create_config_file()
         self.config = self.load_config()
         self.rtp_log_level = self.config['rtp']['log_level']
-        self.allow_duplicate_bills = bool(self.config['rtp']['allow_duplicate_bills'])
-        self.bill_tenant_0 = bool(self.config['rtp']['bill_tenant_0'])
-        self.rtp_allow_dupes = bool(self.config['rtp']['allow_duplicate_bills'])
+        self.allow_duplicate_bills = str2bool(self.config['rtp']['allow_duplicate_bills'])
+        self.bill_tenant_0 = str2bool(self.config['rtp']['bill_tenant_0'])
         self.sql_log_level = self.config['sql']['log_level']
         self.sql_db_fname = self.google_path + self.config['sql']['db_file_name']
         self.pdf_log_level = self.config['pdf']['log_level']
@@ -47,6 +46,7 @@ class RunTimeParams:
 
         self.ubl: List[UtilityBill] = []
         self.tl: List[Tenant] = []
+        self.tbl: List[TenantBill] = []
 
     def create_config_file(self):
         """ Creates a new, default, server config file. """
@@ -55,7 +55,7 @@ class RunTimeParams:
         # default values:
         config['rtp'] = {'log_level': 'DEBUG'}
         config['sql'] = {'log_level': 'DEBUG',  'db_file_name': 'billing.sqlite'}
-        config['pdf'] = {'log_level': 'DEBUG', 'docx_template': 'billing_template.docx'}
+        config['pdf_long_name'] = {'log_level': 'DEBUG', 'docx_template': 'billing_template.docx_long_name'}
         config['email_addr'] = {'log_level': 'DEBUG', 'email_user': 'MTWallets@outlook.com',
                            'email_pswd': 'MTnoreply430', 'server': 'smtp-mail.outlook.com',
                            'port': '587', 'msg_body': 'Please see the attached rent bill. E-transfers or questions may be sent to peter.v@live.ca'}
@@ -80,8 +80,7 @@ class RunTimeParams:
         for ub in self.ubl:
             ub.tenants = []
             for t in self.tl:
-                i = t.id
-                ub.tenants.append(i)
+                ub.tenants.append(t.id)
 
     def print_bill_date(self):
         print("Year: {}, Month: {}\n".format(self.year, self.month))
@@ -104,8 +103,8 @@ class RunTimeParams:
     def print_tenant_bills(self):
         print("\nTenant list for {} {}:".format(self.month, self.year))
         print("\n" + Fore.BLUE + "{:32} | {:11} | {:11} | {:11} | {:11} | {:11} | {:11}".format("Name", "Room", "Internet", "Electricity", "Gas", "Other", "Total") + Fore.RESET)
-        for t in self.tl:
-            print("{:32} | {:11} | {:11} | {:11} | {:11} | {:11} | {:11}".format(t.name, t.charge_room, t.charge_internet, t.charge_electricity, t.charge_gas, t.charge_other, t.charge_total))
+        for t in self.tbl:
+            print("{:32} | {:11} | {:11} | {:11} | {:11} | {:11} | {:11}".format(t.tenant_name, t.charge_room, t.charge_internet, t.charge_electricity, t.charge_gas, t.charge_other, t.charge_total))
 
     @staticmethod
     def print_error(s):
@@ -121,30 +120,14 @@ class Tenant:
         self.year_out = -1
         self.month_in = -1
         self.month_out = -1
-        self.charge_room = 0.0
-        self.charge_internet = 0.0
-        self.charge_gas = 0.0
-        self.charge_electricity = 0.0
-        self.charge_other = 0.0
-        self.charge_total = 0.0
-        self.memo_internet = 0.0
-        self.memo_gas = ''
-        self.memo_electricity = ''
-        self.memo_other = ''
-        self.pdf = None
-        self.pdf_short_name = None
-        self.docx = None
-        self.email_msg = None
-
-    def update_total(self):
-        self.charge_total = round((self.charge_room + self.charge_internet + self.charge_gas + self.charge_electricity + self.charge_other), 2)
 
     def print(self):
         print('{} | {:32} | {:24}'.format(self.id, self.name, self.email_addr))
 
 
 class UtilityBill:
-    def __init__(self, label: str='', amount: float=0.0, tenants: List[int]=None, month: int=0, year: int=0, memo: str = ''):
+    def __init__(self, label: str='', amount: float=0.0, tenants: List[int]=None,
+                 month: int=0, year: int=0, memo: str = ''):
         self.label = label
         self.amount = amount
         self.month = month
@@ -157,6 +140,45 @@ class UtilityBill:
         for t in self.tenants:
             string += ' ' + str(t)
         print('{:12} | {:8} |{}'.format(self.label, self.amount, string))
+
+
+class TenantBill:
+    def __init__(self,
+                 tenant_id: int=0,
+                 tenant_name: str='',
+                 charge_room: float=0.0,
+                 charge_internet: float=0.0,
+                 charge_gas: float=0.0,
+                 charge_electricity: float=0.0,
+                 charge_other: float=0.0,
+                 charge_total: float=0.0,
+                 memo_internet: str='',
+                 memo_gas: float=0.0,
+                 memo_electricity: float=0.0,
+                 memo_other: float=0.0,
+                 pdf_long_name=None,
+                 pdf_short_name=None,
+                 docx_long_name=None,
+                 email_msg=None):
+        self.tenant_id = tenant_id
+        self.tenant_name = tenant_name
+        self.charge_room = charge_room
+        self.charge_internet = charge_internet
+        self.charge_gas = charge_gas
+        self.charge_electricity = charge_electricity
+        self.charge_other = charge_other
+        self.charge_total = charge_total
+        self.memo_internet = memo_internet
+        self.memo_gas = memo_gas
+        self.memo_electricity = memo_electricity
+        self.memo_other = memo_other
+        self.pdf_long_name = pdf_long_name
+        self.pdf_short_name = pdf_short_name
+        self.docx_long_name = docx_long_name
+        self.email_msg = email_msg
+
+    def update_total(self):
+        self.charge_total = round((self.charge_room + self.charge_internet + self.charge_gas + self.charge_electricity + self.charge_other), 2)
 
 
 def func_1():
@@ -175,7 +197,7 @@ def func_3():
 
 
 def remove_tenant_0(tl: List[Tenant]):
-    """ Removes tenant 0 from the list. Used to prevent house owner from being emailed a bill. """
+    """ Removes tenant_id 0 from the list. Used to prevent house owner from being emailed a bill. """
     for t in tl:
         if t.id == 0:
             tl.remove(t)
@@ -256,4 +278,5 @@ def print_bills(tl: List[Tenant]):
         print(vars(t))
 
 
-
+def str2bool(v):
+    return v.lower() in ("yes", "true", "t", "1")
