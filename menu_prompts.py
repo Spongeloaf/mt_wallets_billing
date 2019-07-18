@@ -70,5 +70,15 @@ Review the utility bill list and billing date.
 1: Accept
 0: Abort""")
 
+sql_tb_insert_failure = textwrap.dedent("""\
+Duplicate Tenant bills in the database. Would you like to update them with the new bills?
+1: Yes
+0: No - Return to main menu""")
+
+sql_ub_insert_failure = textwrap.dedent("""\
+Duplicate utility bills in the database. Would you like to update them with the new bills?
+1: Yes
+0: No - Return to main menu""")
+
 dummy = textwrap.dedent("""\
 """)

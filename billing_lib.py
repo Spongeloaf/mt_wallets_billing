@@ -7,6 +7,7 @@ import configparser
 from sys import exit
 from colorama import Fore
 from colorama import init as color_init
+from calendar import month_name as calendar_month_name
 
 
 class RunTimeParams:
@@ -15,8 +16,9 @@ class RunTimeParams:
         self.prepare = False
         self.compose = False
         self.send = False
-        self.month = ''
-        self.year = ''
+        self.month_int = 0
+        self.year = 0
+        self.month_str = ''
         self.duplicates_found = False
         self.google_path = get_google_drive_path()
         self.config_fname = self.google_path + 'settings.ini'
@@ -24,7 +26,6 @@ class RunTimeParams:
             self.create_config_file()
         self.config = self.load_config()
         self.rtp_log_level = self.config['rtp']['log_level']
-        self.allow_duplicate_bills = str2bool(self.config['rtp']['allow_duplicate_bills'])
         self.bill_tenant_0 = str2bool(self.config['rtp']['bill_tenant_0'])
         self.sql_log_level = self.config['sql']['log_level']
         self.sql_db_fname = self.google_path + self.config['sql']['db_file_name']
@@ -73,7 +74,7 @@ class RunTimeParams:
             self.critical_stop('Config file KeyError. Check config file for missing values!')
 
     def billing_date_use_current(self):
-        self.month = datetime.date.today().month
+        self.month_int = datetime.date.today().month
         self.year = datetime.date.today().year
 
     def ub_tenant_list_from_tl(self):
@@ -83,28 +84,32 @@ class RunTimeParams:
                 ub.tenants.append(t.id)
 
     def print_bill_date(self):
-        print("Year: {}, Month: {}\n".format(self.year, self.month))
+        print("Year: {}, Month: {}\n".format(self.year, self.month_int))
 
     def critical_stop(self, message: str):
         self.logger.critical("Program halted for reason: {}".format(message))
         exit(1)
 
     def print_tenant_list(self):
-        print("\nTenant list for {} {}:".format(self.month, self.year))
+        print("\nTenant list for {} {}:".format(self.month_str, self.year))
         for t in self.tl:
             t.print()
 
     def print_utility_bills(self):
-        print("\nUtility bill list for {} {}:".format(self.month, self.year))
+        print("\nUtility bill list for {} {}:".format(self.month_int, self.year))
         print("\n" + Fore.BLUE + "{:12} | {:8} |{}".format("Label", "Amount", "Tenants") + Fore.RESET)
         for ub in self.ubl:
             ub.print()
 
     def print_tenant_bills(self):
-        print("\nTenant list for {} {}:".format(self.month, self.year))
+        print("\nTenant list for {} {}:".format(self.month_int, self.year))
         print("\n" + Fore.BLUE + "{:32} | {:11} | {:11} | {:11} | {:11} | {:11} | {:11}".format("Name", "Room", "Internet", "Electricity", "Gas", "Other", "Total") + Fore.RESET)
         for t in self.tbl:
             print("{:32} | {:11} | {:11} | {:11} | {:11} | {:11} | {:11}".format(t.tenant_name, t.charge_room, t.charge_internet, t.charge_electricity, t.charge_gas, t.charge_other, t.charge_total))
+
+    def set_month(self, m: int):
+        self.month_int = m
+        self.month_str = calendar_month_name[m]
 
     @staticmethod
     def print_error(s):
@@ -153,13 +158,15 @@ class TenantBill:
                  charge_other: float=0.0,
                  charge_total: float=0.0,
                  memo_internet: str='',
-                 memo_gas: float=0.0,
-                 memo_electricity: float=0.0,
-                 memo_other: float=0.0,
+                 memo_gas: str='',
+                 memo_electricity: str='',
+                 memo_other: str='',
+                 paid = False,
                  pdf_long_name=None,
                  pdf_short_name=None,
                  docx_long_name=None,
-                 email_msg=None):
+                 email_msg=None,
+                 email_addr: str= ''):
         self.tenant_id = tenant_id
         self.tenant_name = tenant_name
         self.charge_room = charge_room
@@ -172,10 +179,12 @@ class TenantBill:
         self.memo_gas = memo_gas
         self.memo_electricity = memo_electricity
         self.memo_other = memo_other
+        self.paid = paid
         self.pdf_long_name = pdf_long_name
         self.pdf_short_name = pdf_short_name
         self.docx_long_name = docx_long_name
         self.email_msg = email_msg
+        self.email_addr = email_addr
 
     def update_total(self):
         self.charge_total = round((self.charge_room + self.charge_internet + self.charge_gas + self.charge_electricity + self.charge_other), 2)

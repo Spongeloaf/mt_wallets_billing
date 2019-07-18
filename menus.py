@@ -50,35 +50,25 @@ class Menu:
 
     def add_utiility_bill(self):
         while True:
-            ub = blib.UtilityBill()
-            # get year
-            self.prompt(mp.get_billing_year)
-            selection = self.get_year()
-            if selection == 0:
+            if not self.input_billing_dates():
                 return
-            else:
-                ub.year = selection
-                self.rtp.year = selection
 
-            # get month
-            self.prompt(mp.get_billing_month)
-            selection = self.get_month()
-            if selection == 0:
-                return
-            else:
-                ub.month = selection
-                self.rtp.month = selection
+            ub = blib.UtilityBill()
 
             # get tenant_id list, so we don't have to write tenant_id list strings ourselves.
             self.sql.get_tenants_by_date()
+            system('cls')
             self.rtp.print_tenant_list()
             self.prompt(mp.check_tenant_bill_list)
             selection = self.get_int(0, 1)
             if selection == 0:
                 return
 
+            ub.year = self.rtp.year
+            ub.month = self.rtp.month_int
+
             # Prevents typos by providing int options instead of user typing their own labels
-            self.prompt(mp.utility_bill_type.format(self.rtp.month, self.rtp.year))
+            self.prompt(mp.utility_bill_type.format(self.rtp.month_int, self.rtp.year))
             selection = self.get_int(0, 4)
             if selection == 0:
                 return
@@ -106,7 +96,13 @@ class Menu:
                 return
 
             # commit
-            self.sql.insert_utility_bills()
+            if not self.sql.utility_bills_sql_insert():
+                self.prompt(mp.sql_ub_insert_failure)
+                selection = self.get_int(0, 1)
+                if selection == 0:
+                    return
+                self.sql.utility_bills_sql_update()
+
             self.prompt(mp.utility_bill_end)
             selection = self.get_int(0, 1)
             if selection == 0:
@@ -115,28 +111,15 @@ class Menu:
     def prepare_tenant_bills(self):
         while True:
             self.prompt(mp.prepare_tenant_bills)
-            selection = self.get_int(0, 1)
+            if not self.input_billing_dates():
+                return
+            selection = self.get_int(0, 2)
             if selection == 0:
                 return
             if selection == 1:
-                # get year
-                self.prompt(mp.get_billing_year)
-                selection = self.get_year()
-                if selection == 0:
-                    return
-                else:
-                    self.rtp.year = selection
-
-                # get month
-                self.prompt(mp.get_billing_month)
-                selection = self.get_month()
-                if selection == 0:
-                    return
-                else:
-                    self.rtp.month = selection
-
                 # prepare tenant_id list
                 self.sql.get_tenants_by_date()
+                system('cls')
                 self.rtp.print_tenant_list()
                 print(mp.check_tenant_bill_list)
                 selection = self.get_int(0, 1)
@@ -158,7 +141,18 @@ class Menu:
                     return
 
                 # save bills
-                self.sql.save_tenant_bills()
+                if not self.sql.tenant_bills_sql_insert():
+                    self.prompt(mp.sql_tb_insert_failure)
+                    selection = self.get_int(0, 1)
+                    if selection == 0:
+                        return
+                    self.sql.tenant_bills_sql_update()
+            else:
+                print("!!!!!!!NOT IMPLEMENTED YET!!!!!!!!")
+                # prepare tenant_id list
+                self.sql.get_tenants_by_date()
+                self.sql.load_tenant_bills()
+
 
             # shall we compose docs?
             self.prompt(mp.prepare_pdf)
@@ -166,9 +160,11 @@ class Menu:
             if selection == 0:
                 return
             if selection == 1:
+                print("Generating PDFs. This may take some time...")
                 self.pdf.tenant_bills_to_docx()
                 self.pdf.docx_to_pdf()
             if selection == 2:
+                print("Generating DOCXs. This may take some time...")
                 self.pdf.tenant_bills_to_docx()
 
             # shall we email?
@@ -177,12 +173,12 @@ class Menu:
             if selection == 0:
                 return
             if selection == 1:
-                print("Generating PDFs. This may take some time...")
+                print("Sending emails. This may take some time...")
                 self.mail.compose_email()
                 self.mail.send_email()
                 return
             if selection == 2:
-                print("Generating PDFs. This may take some time...")
+                print("Generating emails to landlord. This may take some time...")
                 self.mail.compose_email()
                 self.mail.email_to_landord()
                 self.mail.send_email()
@@ -194,27 +190,44 @@ class Menu:
         if prompt != "":
             print(prompt)
 
-    def get_year(self):
+    def input_billing_dates(self):
+        # get year
+        self.prompt(mp.get_billing_year)
+        proceed = self.__get_year()
+        if not proceed:
+            return False
+
+        # get month
+        self.prompt(mp.get_billing_month)
+        proceed = self.__get_month()
+        if not proceed:
+            return False
+        return True
+
+    def __get_year(self):
         while True:
             selection = input("")
             if selection == '':
                 selection = datetime.date.today().year
-
             try:
                 # selection is int. Subtract one for slicing func list.
                 selection = int(selection)
                 if self.selection_is_valid(0, 9999, selection):
-                    return selection
+                    if selection == 0:
+                        return False
+                    else:
+                        self.rtp.year = selection
+                        return True
             except ValueError:
                 if selection == '*':
-                    return 0
+                    return False
                 if selection == 'q':
-                    return 0
+                    return False
                 if selection == '0':
-                    return 0
+                    return False
             print("\nInvalid selection. Please try again.\n")
 
-    def get_month(self):
+    def __get_month(self):
         while True:
             selection = input("")
             if selection == '':
@@ -224,14 +237,19 @@ class Menu:
                 # selection is int. Subtract one for slicing func list.
                 selection = int(selection)
                 if self.selection_is_valid(0, 12, selection):
-                    return selection
+                    if selection == 0:
+                        return False
+                    else:
+                        # selection must be between 1 and 12 if we get here
+                        self.rtp.set_month(selection)
+                        return True
             except ValueError:
                 if selection == '*':
-                    return 0
+                    return False
                 if selection == 'q':
-                    return 0
+                    return False
                 if selection == '0':
-                    return 0
+                    return False
             print("\nInvalid selection. Please try again.\n")
 
     def get_int(self, lower: int, upper: int):
