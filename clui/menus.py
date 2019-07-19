@@ -1,8 +1,5 @@
-import menu_prompts as mp
-import billing_lib as blib
-import sql_interface
-import pdf_compositor
-import bill_mailer
+from clui import menu_prompts as mp
+from src import billing_lib as blib, bill_mailer, sql_interface, pdf_compositor
 from os import system
 from sys import exit
 import datetime
@@ -12,6 +9,7 @@ from colorama import Fore
 
 class Menu:
     def __init__(self):
+
         """ Creates a cmd prompt menu
         The first selection is always the default if nothing is entered. """
         # init

@@ -1,0 +1,1 @@
+start .\venv\Scripts\python.exe -i "C:\dev\mt_wallets_billing\run_me.py"

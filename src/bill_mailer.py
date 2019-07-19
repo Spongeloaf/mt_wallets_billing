@@ -1,5 +1,4 @@
-from billing_lib import *
-from typing import List
+from src.billing_lib import *
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText

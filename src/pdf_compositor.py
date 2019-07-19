@@ -1,11 +1,8 @@
-from billing_lib import *
+from src.billing_lib import *
 from mailmerge import MailMerge
-from billing_lib import RunTimeParams, Tenant
-from typing import List
-import calendar
+from src.billing_lib import RunTimeParams
 import datetime
 import comtypes.client
-
 from genericpath import isfile
 from os import remove
 

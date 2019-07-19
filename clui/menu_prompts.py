@@ -1,12 +1,12 @@
 import textwrap
 
 main_loop_begin = textwrap.dedent("""\
-MTWallets Billing Suite
+MT Wallets Billing Suite
 Type a number and press enter to navigate. Just pressing enter selects option 1.
-1: Tenant Bill Receivables
-2: Add utility bills
-3: Prepare tenant_id bills
-0: Abort""")
+1: Mark Tenant Bills as paid
+2: Add Utility Bills
+3: Prepare & Send Tenant bills
+0: Exit""")
 
 prepare_tenant_bills = textwrap.dedent("""\
 Would you like to generate new tenant_id bills?
