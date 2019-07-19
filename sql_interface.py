@@ -77,10 +77,10 @@ class SqlInterface:
             tb.email_addr = t.email_addr
             tb.month = self.rtp.month_int
             tb.year = self.rtp.year
+            tb.charge_room = t.room_rate
             for bill in self.rtp.ubl:
                 if t.id in bill.tenants:
                     self.__add_bill(bill, tb)
-            tb.update_total()
             self.rtp.tbl.append(tb)
 
     def utility_bills_sql_insert(self):
@@ -107,7 +107,6 @@ class SqlInterface:
         for t in self.rtp.tbl:
             self.sql_curr.execute("SELECT * from tenant_bills WHERE (year IS ?) and (month is ?) and (tenant_id IS ?)", [self.rtp.year, self.rtp.month_int, t.tenant_id])
             if len(self.sql_curr.fetchall()) > 0:
-                self.rtp.print_error("Duplicate bills in tenant_bills_sql_insert(): {}".format(vars(t)))
                 return False
             else:
                 self.sql_curr.execute("INSERT INTO tenant_bills VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
@@ -139,14 +138,7 @@ class SqlInterface:
         for row in self.sql_curr.fetchall():
             self.__sql_tenant_bill_to_obj(row)
 
-
     # private member functions
-    def __update_tenant_bill(self, t: TenantBill):
-        self.sql_curr.execute("REPLACE INTO tenant_bills VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                              [t.tenant_id, t.tenant_name, self.rtp.month_int, self.rtp.year, 0,
-                               t.charge_room, t.charge_internet, t.charge_electricity, t.charge_gas, t.charge_other, t.charge_total,
-                               t.memo_internet, t.memo_gas, t.memo_electricity, t.memo_other])
-
     def __sql_tenant_bill_to_obj(self, row: List):
         tb = TenantBill()
         tb.tenant_id = row[0]
@@ -173,7 +165,7 @@ class SqlInterface:
             tenant.id = row[0]
             tenant.name = row[1]
             tenant.email_addr = row[2]
-            tenant.charge_room = row[4]
+            tenant.room_rate = row[4]
             self.rtp.tl.append(tenant)
             self.logger.info("Tenant found: {}, ID: {}, email_addr: {}".format(tenant.name, tenant.id, tenant.email_addr))
 

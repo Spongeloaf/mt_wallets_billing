@@ -46,7 +46,7 @@ class RunTimeParams:
 
         self.ubl: List[UtilityBill] = []
         self.tl: List[Tenant] = []
-        self.tbl: List[TenantBill] = []
+        self.tbl = TenantBillList()
 
     def create_config_file(self):
         """ Creates a new, default, server config file. """
@@ -103,6 +103,7 @@ class Tenant:
         self.id = 0
         self.email_addr = ''
         self.name = ''
+        self.room_rate = 0.0
         self.year_in = -1
         self.year_out = -1
         self.month_in = -1
@@ -178,6 +179,12 @@ class TenantBill:
     def print(self):
         print('{:32} | {:4} | {:11} | {:11} | {:11} | {:11} | {:11} | {:11}'.format(self.tenant_name, self.paid, self.charge_room, self.charge_internet,
                                                                             self.charge_electricity, self.charge_gas, self.charge_other, self. charge_total))
+
+
+class TenantBillList(List):
+    def append(self, tb: TenantBill):
+        tb.update_total()
+        super(TenantBillList, self).append(tb)
 
 
 def func_1():
