@@ -2,7 +2,6 @@ from typing import List
 import datetime
 from genericpath import isfile
 import logging
-from sys import exit
 import configparser
 from sys import exit
 from colorama import Fore
@@ -90,23 +89,6 @@ class RunTimeParams:
         self.logger.critical("Program halted for reason: {}".format(message))
         exit(1)
 
-    def print_tenant_list(self):
-        print("\nTenant list for {} {}:".format(self.month_str, self.year))
-        for t in self.tl:
-            t.print()
-
-    def print_utility_bills(self):
-        print("\nUtility bill list for {} {}:".format(self.month_int, self.year))
-        print("\n" + Fore.BLUE + "{:12} | {:8} |{}".format("Label", "Amount", "Tenants") + Fore.RESET)
-        for ub in self.ubl:
-            ub.print()
-
-    def print_tenant_bills(self):
-        print("\nTenant list for {} {}:".format(self.month_int, self.year))
-        print("\n" + Fore.BLUE + "{:32} | {:11} | {:11} | {:11} | {:11} | {:11} | {:11}".format("Name", "Room", "Internet", "Electricity", "Gas", "Other", "Total") + Fore.RESET)
-        for t in self.tbl:
-            print("{:32} | {:11} | {:11} | {:11} | {:11} | {:11} | {:11}".format(t.tenant_name, t.charge_room, t.charge_internet, t.charge_electricity, t.charge_gas, t.charge_other, t.charge_total))
-
     def set_month(self, m: int):
         self.month_int = m
         self.month_str = calendar_month_name[m]
@@ -151,6 +133,8 @@ class TenantBill:
     def __init__(self,
                  tenant_id: int=0,
                  tenant_name: str='',
+                 month: int=0,
+                 year: int=0,
                  charge_room: float=0.0,
                  charge_internet: float=0.0,
                  charge_gas: float=0.0,
@@ -161,7 +145,7 @@ class TenantBill:
                  memo_gas: str='',
                  memo_electricity: str='',
                  memo_other: str='',
-                 paid = False,
+                 paid=False,
                  pdf_long_name=None,
                  pdf_short_name=None,
                  docx_long_name=None,
@@ -169,6 +153,8 @@ class TenantBill:
                  email_addr: str= ''):
         self.tenant_id = tenant_id
         self.tenant_name = tenant_name
+        self.month = month
+        self.year = year
         self.charge_room = charge_room
         self.charge_internet = charge_internet
         self.charge_gas = charge_gas
@@ -188,6 +174,10 @@ class TenantBill:
 
     def update_total(self):
         self.charge_total = round((self.charge_room + self.charge_internet + self.charge_gas + self.charge_electricity + self.charge_other), 2)
+
+    def print(self):
+        print('{:32} | {:4} | {:11} | {:11} | {:11} | {:11} | {:11} | {:11}'.format(self.tenant_name, self.paid, self.charge_room, self.charge_internet,
+                                                                            self.charge_electricity, self.charge_gas, self.charge_other, self. charge_total))
 
 
 def func_1():

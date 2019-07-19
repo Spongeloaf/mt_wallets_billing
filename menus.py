@@ -6,6 +6,8 @@ import bill_mailer
 from os import system
 from sys import exit
 import datetime
+from colorama import Fore
+
 
 
 class Menu:
@@ -24,8 +26,9 @@ class Menu:
     def run(self):
         while True:
             # prevents lists from being re-used when finished with a task
-            self.rtp.tl = []
-            self.rtp.ubl = []
+            self.rtp.tl.clear()
+            self.rtp.ubl.clear()
+            self.rtp.tbl.clear()
 
             self.prompt(mp.main_loop_begin)
             selection = self.get_int(0, 3)
@@ -44,9 +47,31 @@ class Menu:
 
     def tenant_bill_recievables(self):
         # get unpaid bills
-        self.sql.load_tenant_bills()
+        self.sql.fetch_unpaid_tenant_bills()
+        self.print_tenant_bills()
+        print(mp.please_review_list)
+        selection = self.get_int(0, 1)
+        if selection == 0:
+            return
 
         # for bill in bill list, mark as paid
+        changes = False
+        for tb in self.rtp.tbl:
+            self.prompt(mp.is_tenant_bill_paid_1)
+            tb.print()
+            print(mp.is_tenant_bill_paid_2)
+            selection = self.get_int(0, 2)
+            if selection == 0:
+                return
+            if selection == 1:
+                continue
+            if selection == 2:
+                tb.paid = 1
+                changes = True
+        if changes:
+            self.sql.tenant_bills_sql_update()
+        self.prompt(mp.tenant_bills_updated)
+        input()
 
     def add_utiility_bill(self):
         while True:
@@ -58,8 +83,8 @@ class Menu:
             # get tenant_id list, so we don't have to write tenant_id list strings ourselves.
             self.sql.get_tenants_by_date()
             system('cls')
-            self.rtp.print_tenant_list()
-            self.prompt(mp.check_tenant_bill_list)
+            self.print_tenant_list()
+            self.prompt(mp.please_review_list)
             selection = self.get_int(0, 1)
             if selection == 0:
                 return
@@ -90,7 +115,7 @@ class Menu:
             self.rtp.ubl.append(ub)
             self.rtp.ub_tenant_list_from_tl()
             self.prompt(mp.check_utility_bill_list)
-            self.rtp.print_utility_bills()
+            self.print_utility_bills()
             selection = self.get_int(0, 1)
             if selection == 0:
                 return
@@ -110,18 +135,18 @@ class Menu:
 
     def prepare_tenant_bills(self):
         while True:
-            self.prompt(mp.prepare_tenant_bills)
             if not self.input_billing_dates():
                 return
+            self.prompt(mp.prepare_tenant_bills)
             selection = self.get_int(0, 2)
             if selection == 0:
                 return
             if selection == 1:
+
                 # prepare tenant_id list
                 self.sql.get_tenants_by_date()
-                system('cls')
-                self.rtp.print_tenant_list()
-                print(mp.check_tenant_bill_list)
+                self.print_tenant_list()
+                print(mp.please_review_list)
                 selection = self.get_int(0, 1)
                 if selection == 0:
                     return
@@ -130,12 +155,12 @@ class Menu:
                 self.prompt("")
                 self.sql.get_utility_bills()
                 self.sql.check_utility_bill_tenants()
-                self.rtp.print_utility_bills()
+                self.print_utility_bills()
                 self.sql.prepare_tennant_bills()
                 self.prompt("")
-                self.rtp.print_tenant_bills()
+                self.print_tenant_bills()
 
-                # confirm tenant_id bills
+                # confirm tenant bills
                 selection = self.get_int(0, 1)
                 if selection == 0:
                     return
@@ -151,7 +176,7 @@ class Menu:
                 print("!!!!!!!NOT IMPLEMENTED YET!!!!!!!!")
                 # prepare tenant_id list
                 self.sql.get_tenants_by_date()
-                self.sql.load_tenant_bills()
+                self.sql.fetch_unpaid_tenant_bills()
 
 
             # shall we compose docs?
@@ -294,3 +319,19 @@ class Menu:
             return False
         return True
 
+    def print_tenant_list(self):
+        self.prompt("\nTenant list for {} {}:".format(self.rtp.month_str, self.rtp.year))
+        for t in self.rtp.tl:
+            t.print()
+
+    def print_utility_bills(self):
+        self.prompt("\nUtility bill list for {} {}:".format(self.rtp.month_str, self.rtp.year))
+        print("\n" + Fore.BLUE + "{:12} | {:8} |{}".format("Label", "Amount", "Tenants") + Fore.RESET)
+        for ub in self.rtp.ubl:
+            ub.print()
+
+    def print_tenant_bills(self):
+        self.prompt("\nTenant list for {} {}:".format(self.rtp.month_str, self.rtp.year))
+        print("\n" + Fore.BLUE + "{:32} | {:4} | {:11} | {:11} | {:11} | {:11} | {:11} | {:11}".format("Name", "Paid", "Room", "Internet", "Electricity", "Gas", "Other", "Total") + Fore.RESET)
+        for t in self.rtp.tbl:
+            t.print()

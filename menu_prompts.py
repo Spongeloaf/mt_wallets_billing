@@ -28,8 +28,8 @@ get_billing_month = textwrap.dedent("""\
 Please type an integer for the month. Alternatively, just press enter to select the current month.
 You may enter 0, q, or * to exit.""")
 
-check_tenant_bill_list = textwrap.dedent("""\
-Review the tenant_id list and billing date. 
+please_review_list = textwrap.dedent("""\
+Review the list before we continue. 
 1: Accept
 0: Abort""")
 
@@ -79,6 +79,19 @@ sql_ub_insert_failure = textwrap.dedent("""\
 Duplicate utility bills in the database. Would you like to update them with the new bills?
 1: Yes
 0: No - Return to main menu""")
+
+is_tenant_bill_paid_1 = textwrap.dedent("""\
+Would you like to mark this bill as paid?
+""")
+
+is_tenant_bill_paid_2 = textwrap.dedent("""\
+1: No
+2: Yes
+0: Abort""")
+
+tenant_bills_updated = textwrap.dedent("""\
+Tenant bills have been updated. Press Enter to continue.""")
+
 
 dummy = textwrap.dedent("""\
 """)
