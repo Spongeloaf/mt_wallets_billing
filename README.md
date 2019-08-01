@@ -39,7 +39,7 @@ This code has not been tested on any operating system besides Windows 10. It doe
 As previously mentioned, this program is well encapsulated. The *RunTimeParameter* class provides all of the necessary user data and config settings for each module. The modules are *SqlInterface*, *PdfCompositor*, and *BillMailer*.
 To initialize the software, all you need is:
 ```
-# pretend this line is import statments
+# import statements
 
 rtp = billing_lib.RunTimeParams()
 sql = sql_interface.SqlInterface(rtp)
