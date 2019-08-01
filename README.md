@@ -28,9 +28,10 @@ This code is completely unlicensed. Using it may harm your PC, or cause hair los
 
 As of this moment, OAuth2 is not yet implemented. 
 
-#### THIS SOFTWARE IS NOT SECURE.  
+
+### THIS SOFTWARE IS NOT SECURE.  
 #### The password for your email account is stored in a config file, in plain text. Use a throwaway email account not tied to any online services for this software. 
-#### USE THIS SOFTWARE ENTIRELY AT YOUR OWN RISK.
+### USE THIS SOFTWARE ENTIRELY AT YOUR OWN RISK.
 
 # Deployment
 This code has not been tested on any operating system besides Windows 10. It does not (yet?) have an installer, but instead seeks out config files on google drive by parsing the google drive config files in the windows user's appdata folder. You will need to mdoify this to suit your own needs. Or modify your computer to suit the programs needs. See the RunTimeProperties class in billing_lib.py, and the Limitations & Liabilities section.
