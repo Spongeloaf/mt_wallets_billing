@@ -1,7 +1,7 @@
 # Introduction
 mt_wallets_billing is a utility for landlords to automatically generate and email rent bills to their tenants. It utilizes SQL for data storage, and comes with a not-at-all stylish command line interface. 
 
-The program follows the data/model/view design philosophy: The components are well encapsulated and it would be easy to load the the libraries into a totally new interface, such as a web server. The data is stored in an sqlite db, the model for the data is contained within billing_lib.py, sql_interface.py, pdf_compositor.py, and bill_mailer.py. Finallym, the view is provided by menus.py and menu_prompts.py.  
+The program follows the data/model/view design philosophy: The components are well encapsulated and it would be easy to load the the libraries into a totally new interface, such as a web server. The data is stored in an sqlite db, the model for the data is contained within billing_lib.py, sql_interface.py, pdf_compositor.py, and bill_mailer.py. Finally, the view is provided by menus.py and menu_prompts.py.  
 
 # How do I use it?
 The included CLI is a basic text menu like this:
