@@ -110,7 +110,7 @@ class Tenant:
         self.month_out = -1
 
     def print(self):
-        print('{} | {:32} | {:24}'.format(self.id, self.name, self.email_addr))
+        print('{} | {:28} | {:24}'.format(self.id, self.name, self.email_addr))
 
 
 class UtilityBill:
@@ -177,7 +177,7 @@ class TenantBill:
         self.charge_total = round((self.charge_room + self.charge_internet + self.charge_gas + self.charge_electricity + self.charge_other), 2)
 
     def print(self):
-        print('{:32} | {:4} | {:11} | {:11} | {:11} | {:11} | {:11} | {:11}'.format(self.tenant_name, self.paid, self.charge_room, self.charge_internet,
+        print('{:28} | {:4} | {:11} | {:11} | {:11} | {:11} | {:11} | {:11}'.format(self.tenant_name, self.paid, self.charge_room, self.charge_internet,
                                                                             self.charge_electricity, self.charge_gas, self.charge_other, self. charge_total))
 
 

@@ -82,7 +82,9 @@ class Menu:
             self.sql.get_tenants_by_date()
             system('cls')
             self.print_tenant_list()
-            self.prompt(mp.please_review_list)
+            print(mp.please_review_list)
+            selection = self.get_int(0, 1)
+            self.print_utility_bills()
             selection = self.get_int(0, 1)
             if selection == 0:
                 return
@@ -112,19 +114,21 @@ class Menu:
 
             self.rtp.ubl.append(ub)
             self.rtp.ub_tenant_list_from_tl()
+            self.sql.utility_bills_sql_insert()
             self.prompt(mp.check_utility_bill_list)
             self.print_utility_bills()
             selection = self.get_int(0, 1)
             if selection == 0:
                 return
 
+            # self.sql.utility_bills_sql_insert()
             # commit
-            if not self.sql.utility_bills_sql_insert():
-                self.prompt(mp.sql_ub_insert_failure)
-                selection = self.get_int(0, 1)
-                if selection == 0:
-                    return
-                self.sql.utility_bills_sql_update()
+            # if not self.sql.utility_bills_sql_insert():
+            #     self.prompt(mp.sql_ub_insert_failure)
+            #     selection = self.get_int(0, 1)
+            #     if selection == 0:
+            #         return
+            #     self.sql.utility_bills_sql_update()
 
             self.prompt(mp.utility_bill_end)
             selection = self.get_int(0, 1)
@@ -323,6 +327,7 @@ class Menu:
             t.print()
 
     def print_utility_bills(self):
+        self.sql.get_utility_bills()
         self.prompt("\nUtility bill list for {} {}:".format(self.rtp.month_str, self.rtp.year))
         print("\n" + Fore.BLUE + "{:12} | {:8} |{}".format("Label", "Amount", "Tenants") + Fore.RESET)
         for ub in self.rtp.ubl:
@@ -330,6 +335,6 @@ class Menu:
 
     def print_tenant_bills(self):
         self.prompt("\nTenant list for {} {}:".format(self.rtp.month_str, self.rtp.year))
-        print("\n" + Fore.BLUE + "{:32} | {:4} | {:11} | {:11} | {:11} | {:11} | {:11} | {:11}".format("Name", "Paid", "Room", "Internet", "Electricity", "Gas", "Other", "Total") + Fore.RESET)
+        print("\n" + Fore.BLUE + "{:28} | {:4} | {:11} | {:11} | {:11} | {:11} | {:11} | {:11}".format("Name", "Paid", "Room", "Internet", "Electricity", "Gas", "Other", "Total") + Fore.RESET)
         for t in self.rtp.tbl:
             t.print()

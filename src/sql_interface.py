@@ -31,6 +31,7 @@ class SqlInterface:
 
     def get_utility_bills(self):
         """ return bills for month specified """
+        self.rtp.ubl.clear()
         self.sql_curr.execute("SELECT * from utility_bills WHERE (year IS ?) and (month is ?)", [self.rtp.year, self.rtp.month_int])
         for row in self.sql_curr:
             label = row[0]
@@ -54,8 +55,6 @@ class SqlInterface:
             ub = UtilityBill(label, amount, tenants, month, year, memo)
             self.rtp.ubl.append(ub)
             self.logger.info("Utility Bill found: {} for {} split between tenants: {}".format(label, amount, tenants_str))
-        if len(self.rtp.ubl) == 0:
-            self.rtp.print_error("No utility bills found for query!")
 
     def check_utility_bill_tenants(self):
         id_list = []
@@ -88,13 +87,15 @@ class SqlInterface:
         for ub in self.rtp.ubl:
             tenant_str = self.__tenants_list_to_str(ub)
             self.sql_curr.execute("SELECT * from utility_bills WHERE (year IS ?) and (month is ?) and (label IS ?)", [ub.year, ub.month, ub.label])
-            if len(self.sql_curr.fetchall()) > 0:
-                self.rtp.print_error("Duplicate utility bill!")
-                return False
+            fetch = self.sql_curr.fetchall()
+            if len(fetch) > 0:
+                self.sql_curr.execute("UPDATE utility_bills SET amount = ?, tenants = ? WHERE (year IS ?) and (month is ?) and (label IS ?)",
+                                      [ub.amount, tenant_str, ub.year, ub.month, ub.label])
             else:
                 self.sql_curr.execute("INSERT INTO utility_bills VALUES (?,?,?,?,?,?)", [ub.label, ub.amount, ub.month, ub.year, tenant_str, ub.memo])
         self.sql_conn.commit()
-        return True
+        self.rtp.ubl.clear()
+        return
 
     def utility_bills_sql_update(self):
         """ Insert bills in the table. Will check for duplicates first, and warn the user if found. """
@@ -105,14 +106,10 @@ class SqlInterface:
 
     def tenant_bills_sql_insert(self):
         for t in self.rtp.tbl:
-            self.sql_curr.execute("SELECT * from tenant_bills WHERE (year IS ?) and (month is ?) and (tenant_id IS ?)", [self.rtp.year, self.rtp.month_int, t.tenant_id])
-            if len(self.sql_curr.fetchall()) > 0:
-                return False
-            else:
-                self.sql_curr.execute("INSERT INTO tenant_bills VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                                      [t.tenant_id, t.tenant_name, t.month, t.year, t.paid,
-                                       t.charge_room, t.charge_internet, t.charge_electricity, t.charge_gas, t.charge_other, t.charge_total,
-                                       t.memo_internet, t.memo_gas, t.memo_electricity, t.memo_other])
+            self.sql_curr.execute("INSERT OR REPLACE INTO tenant_bills VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                                  [t.tenant_id, t.tenant_name, t.month, t.year, t.paid,
+                                  t.charge_room, t.charge_internet, t.charge_electricity, t.charge_gas, t.charge_other, t.charge_total,
+                                  t.memo_internet, t.memo_gas, t.memo_electricity, t.memo_other])
         self.sql_conn.commit()
         return True
 
