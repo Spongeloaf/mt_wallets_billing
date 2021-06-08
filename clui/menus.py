@@ -336,6 +336,6 @@ class Menu:
 
     def print_tenant_bills(self):
         self.prompt("\nTenant list for {} {}:".format(self.rtp.month_str, self.rtp.year))
-        print("\n" + Fore.BLUE + "{:28} | {:4} | {:11} | {:11} | {:11} | {:11} | {:11} | {:11}".format("Name", "Paid", "Room", "Internet", "Electricity", "Gas", "Other", "Total") + Fore.RESET)
+        print("\n" + Fore.BLUE + "{:28} | {:4} | {:11} | {:11} | {:11} | {:11} | {:11} | {:11} | {:11}".format("Name", "Paid", "Room", "Internet", "Electricity", "Gas", "Recurring", "Other", "Total") + Fore.RESET)
         for t in self.rtp.tenantBillList:
             t.print()

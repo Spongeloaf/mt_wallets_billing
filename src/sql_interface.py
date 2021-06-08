@@ -23,11 +23,18 @@ class SqlInterface:
             self.rtp.print_error("No tenants found for query!")
 
     def get_recurring_bills(self):
-        """ retrieve bills for tenants that represent fixed monthly charges """
+        """
+        retrieve bills for tenants that represent fixed monthly charges
+        row[0] = label
+        row[1] = amount
+        row[2] = tenant
+        row[3] = memo
+        """
         self.sql_curr.execute("SELECT * FROM recurring_charges")
-        self.__sql_tenants_to_list()
-        if len(self.rtp.tenantList) == 0:
-            self.rtp.print_error("No tenants found for query!")
+        self.rtp.recurringChargeList = []
+        for row in self.sql_curr:
+            recurring = RecurringCharges(row[0], row[1], int(row[2]), row[3])
+            self.rtp.recurringChargeList.append(recurring)
 
     def get_tenants_by_active(self):
         """ retrieve list of active tenants """
@@ -162,18 +169,6 @@ class SqlInterface:
         tb.memo_electricity = row[13]
         tb.memo_other = row[14]
         self.rtp.tenantBillList.append(tb)
-
-    def __sql_recurringcharges__(self):
-        """
-        Get a recurring charge from the db
-        row[0] = label
-        row[1] = amount
-        row[2] = tenant
-        row[3] = memo
-        """
-        self.rtp.rcl = []
-        for row in self.sql_curr:
-            self.rtp.rcl.append(RecurringCharges(row[0], row[1], row[2], row[3]))
 
     def __sql_tenants_to_list(self):
         self.rtp.tenantList = []

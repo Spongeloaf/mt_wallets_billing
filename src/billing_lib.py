@@ -195,8 +195,8 @@ class TenantBill:
         self.charge_total = round((self.charge_room + self.charge_internet + self.charge_gas + self.charge_electricity + self.charge_recurring + self.charge_other), 2)
 
     def print(self):
-        print('{:28} | {:4} | {:11} | {:11} | {:11} | {:11} | {:11} | {:11}'.format(self.tenant_name, self.paid, self.charge_room, self.charge_internet,
-                                                                            self.charge_electricity, self.charge_gas, self.charge_other, self. charge_total))
+        print('{:28} | {:4} | {:11} | {:11} | {:11} | {:11} | {:11} | {:11} | {:11}'.format(self.tenant_name, self.paid, self.charge_room, self.charge_internet,
+                                                                            self.charge_electricity, self.charge_gas, self.charge_recurring, self.charge_other, self. charge_total))
 
 
 class TenantBillList(List):
