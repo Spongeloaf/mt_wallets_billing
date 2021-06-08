@@ -19,7 +19,7 @@ class PdfCompositor:
     def tenant_bills_to_docx(self):
         """ Compose a single bill for a tenant_id, save it to disk.
         returns a string containing the path to the saved file. """
-        for t in self.rtp.tbl:
+        for t in self.rtp.tenantBillList:
             if not self.rtp.bill_tenant_0:
                 if t.tenant_id == 0:
                     continue
@@ -32,10 +32,12 @@ class PdfCompositor:
                          gas=format_values(t.charge_gas),
                          internet=format_values(t.charge_internet),
                          electricity=format_values(t.charge_electricity),
+                         recurring=format_values(t.charge_recurring),
                          other=format_values(t.charge_other),
                          memo_gas=format_values(t.memo_gas),
                          memo_internet=format_values(t.memo_internet),
                          memo_electricity=format_values(t.memo_electricity),
+                         memo_recurring=format_values(t.memo_other),
                          memo_other=format_values(t.memo_other),
                          )
             docx = self.rtp.google_path + "bills\\" + self.__format_file_name(t, "docx")
@@ -49,7 +51,7 @@ class PdfCompositor:
         """ Converts the docx_long_name files in a tenant_id list to pdf_long_name """
         wd_format_pdf = 17
         word = comtypes.client.CreateObject('Word.Application')
-        for tb in self.rtp.tbl:
+        for tb in self.rtp.tenantBillList:
             if not self.rtp.bill_tenant_0:
                 if tb.tenant_id == 0:
                     continue

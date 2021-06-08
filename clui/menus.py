@@ -6,7 +6,6 @@ import datetime
 from colorama import Fore
 
 
-
 class Menu:
     def __init__(self):
 
@@ -24,9 +23,9 @@ class Menu:
     def run(self):
         while True:
             # prevents lists from being re-used when finished with a task
-            self.rtp.tl.clear()
-            self.rtp.ubl.clear()
-            self.rtp.tbl.clear()
+            self.rtp.tenantList.clear()
+            self.rtp.utilityBillList.clear()
+            self.rtp.tenantBillList.clear()
 
             self.prompt(mp.main_loop_begin)
             selection = self.get_int(0, 3)
@@ -54,7 +53,7 @@ class Menu:
 
         # for bill in bill list, mark as paid
         changes = False
-        for tb in self.rtp.tbl:
+        for tb in self.rtp.tenantBillList:
             self.prompt(mp.is_tenant_bill_paid_1)
             tb.print()
             print(mp.is_tenant_bill_paid_2)
@@ -112,7 +111,7 @@ class Menu:
             self.prompt(mp.utility_bill_memo)
             ub.memo = input("")
 
-            self.rtp.ubl.append(ub)
+            self.rtp.utilityBillList.append(ub)
             self.rtp.ub_tenant_list_from_tl()
             self.sql.utility_bills_sql_insert()
             self.prompt(mp.check_utility_bill_list)
@@ -153,6 +152,9 @@ class Menu:
                 if selection == 0:
                     return
 
+                # Get recurring charges
+                self.sql.get_recurring_bills()
+
                 # prepare utility bills
                 self.prompt("")
                 self.sql.get_utility_bills()
@@ -179,7 +181,6 @@ class Menu:
                 # prepare tenant_id list
                 self.sql.get_tenants_by_date()
                 self.sql.fetch_unpaid_tenant_bills()
-
 
             # shall we compose docs?
             self.prompt(mp.prepare_pdf)
@@ -323,18 +324,18 @@ class Menu:
 
     def print_tenant_list(self):
         self.prompt("\nTenant list for {} {}:".format(self.rtp.month_str, self.rtp.year))
-        for t in self.rtp.tl:
+        for t in self.rtp.tenantList:
             t.print()
 
     def print_utility_bills(self):
         self.sql.get_utility_bills()
         self.prompt("\nUtility bill list for {} {}:".format(self.rtp.month_str, self.rtp.year))
         print("\n" + Fore.BLUE + "{:12} | {:8} |{}".format("Label", "Amount", "Tenants") + Fore.RESET)
-        for ub in self.rtp.ubl:
+        for ub in self.rtp.utilityBillList:
             ub.print()
 
     def print_tenant_bills(self):
         self.prompt("\nTenant list for {} {}:".format(self.rtp.month_str, self.rtp.year))
         print("\n" + Fore.BLUE + "{:28} | {:4} | {:11} | {:11} | {:11} | {:11} | {:11} | {:11}".format("Name", "Paid", "Room", "Internet", "Electricity", "Gas", "Other", "Total") + Fore.RESET)
-        for t in self.rtp.tbl:
+        for t in self.rtp.tenantBillList:
             t.print()

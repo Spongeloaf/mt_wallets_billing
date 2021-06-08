@@ -44,9 +44,23 @@ class RunTimeParams:
             self.critical_stop("Something has gone very wrong! db file doesn't exist!")
         self.logger.debug("Run Time Properties are initialized")
 
-        self.ubl: List[UtilityBill] = []
-        self.tl: List[Tenant] = []
-        self.tbl = TenantBillList()
+        self.utilityBillList: List[UtilityBill] = []
+        self.tenantList: List[Tenant] = []
+        self.recurringChargeList: List[RecurringCharges] = []
+        self.tenantBillList = TenantBillList()
+
+    def get_recurring_by_tenant(self, tenant_id: int):
+        """ Collects recurring charges for a given tenant """
+        amount = 0.0
+        memo = ""
+        for charge in self.recurringChargeList:
+            if charge.tenant_ID == tenant_id:
+                amount += charge.amount
+                if memo != "":
+                    memo = memo + ", " + charge.memo
+                else:
+                    memo = charge.memo
+        return memo, amount
 
     def create_config_file(self):
         """ Creates a new, default, server config file. """
@@ -77,9 +91,9 @@ class RunTimeParams:
         self.year = datetime.date.today().year
 
     def ub_tenant_list_from_tl(self):
-        for ub in self.ubl:
+        for ub in self.utilityBillList:
             ub.tenants = []
-            for t in self.tl:
+            for t in self.tenantList:
                 ub.tenants.append(t.id)
 
     def print_bill_date(self):
@@ -140,11 +154,13 @@ class TenantBill:
                  charge_internet: float=0.0,
                  charge_gas: float=0.0,
                  charge_electricity: float=0.0,
+                 charge_recurring: float=0.0,
                  charge_other: float=0.0,
                  charge_total: float=0.0,
                  memo_internet: str='',
                  memo_gas: str='',
                  memo_electricity: str='',
+                 memo_recurring: str="",
                  memo_other: str='',
                  paid=False,
                  pdf_long_name=None,
@@ -160,11 +176,13 @@ class TenantBill:
         self.charge_internet = charge_internet
         self.charge_gas = charge_gas
         self.charge_electricity = charge_electricity
+        self.charge_recurring = charge_recurring
         self.charge_other = charge_other
         self.charge_total = charge_total
         self.memo_internet = memo_internet
         self.memo_gas = memo_gas
         self.memo_electricity = memo_electricity
+        self.memo_recurring = memo_recurring
         self.memo_other = memo_other
         self.paid = paid
         self.pdf_long_name = pdf_long_name
@@ -174,7 +192,7 @@ class TenantBill:
         self.email_addr = email_addr
 
     def update_total(self):
-        self.charge_total = round((self.charge_room + self.charge_internet + self.charge_gas + self.charge_electricity + self.charge_other), 2)
+        self.charge_total = round((self.charge_room + self.charge_internet + self.charge_gas + self.charge_electricity + self.charge_recurring + self.charge_other), 2)
 
     def print(self):
         print('{:28} | {:4} | {:11} | {:11} | {:11} | {:11} | {:11} | {:11}'.format(self.tenant_name, self.paid, self.charge_room, self.charge_internet,
@@ -185,6 +203,17 @@ class TenantBillList(List):
     def append(self, tb: TenantBill):
         tb.update_total()
         super(TenantBillList, self).append(tb)
+
+
+class RecurringCharges:
+    def __init__(self, label: str = '', amount: float = 0.0, tenantID: int = "", memo: str = ''):
+        self.label = label
+        self.amount = amount
+        self.tenant_ID = tenantID
+        self.memo = memo
+
+    def print(self):
+        print('{:18} | {:8} |{}'.format(self.tenant_ID, self.amount, self.memo))
 
 
 def func_1():

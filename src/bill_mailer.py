@@ -18,7 +18,7 @@ class Mailer:
 
     def compose_email(self):
         """ Composes an email_addr for each tenant_id """
-        for tb in self.rtp.tbl:
+        for tb in self.rtp.tenantBillList:
             if not self.rtp.bill_tenant_0:
                 if tb.tenant_id == 0:
                     continue
@@ -45,7 +45,7 @@ class Mailer:
     def send_email(self):
         """ Sends an email_addr to each tenant_id """
         self.mail_server.login(self.rtp.mail_user, self.rtp.mail_pswd)
-        for tb in self.rtp.tbl:
+        for tb in self.rtp.tenantBillList:
             if not self.rtp.bill_tenant_0:
                 if tb.tenant_id == 0:
                     continue
@@ -57,12 +57,12 @@ class Mailer:
     def email_to_landord(self):
         """ Changes all email addresses to the address associated with tenant_id 0 """
         email = ''
-        for tb in self.rtp.tbl:
+        for tb in self.rtp.tenantBillList:
             if tb.tenant_id == 0:
                 email = tb.email_addr
 
         if email == '':
             self.rtp.critical_stop("Failed to find email address match in mail.email_to_landlord()")
 
-        for tb in self.rtp.tbl:
+        for tb in self.rtp.tenantBillList:
             tb.email_addr = email

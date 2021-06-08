@@ -19,19 +19,26 @@ class SqlInterface:
         self.sql_curr.execute("SELECT * FROM tenants WHERE ((? < year_out) or ((? == year_out) AND (? <= month_out))) AND ? >= year_in",
                               [self.rtp.year, self.rtp.year, self.rtp.month_int, self.rtp.year])
         self.__sql_tenants_to_list()
-        if len(self.rtp.tl) == 0:
+        if len(self.rtp.tenantList) == 0:
+            self.rtp.print_error("No tenants found for query!")
+
+    def get_recurring_bills(self):
+        """ retrieve bills for tenants that represent fixed monthly charges """
+        self.sql_curr.execute("SELECT * FROM recurring_charges")
+        self.__sql_tenants_to_list()
+        if len(self.rtp.tenantList) == 0:
             self.rtp.print_error("No tenants found for query!")
 
     def get_tenants_by_active(self):
         """ retrieve list of active tenants """
         self.sql_curr.execute("SELECT * FROM tenants WHERE is_current IS 1")
         self.__sql_tenants_to_list()
-        if len(self.rtp.tl) == 0:
+        if len(self.rtp.tenantList) == 0:
             self.rtp.print_error("No tenants found for query!")
 
     def get_utility_bills(self):
         """ return bills for month specified """
-        self.rtp.ubl.clear()
+        self.rtp.utilityBillList.clear()
         self.sql_curr.execute("SELECT * from utility_bills WHERE (year IS ?) and (month is ?)", [self.rtp.year, self.rtp.month_int])
         for row in self.sql_curr:
             label = row[0]
@@ -53,15 +60,15 @@ class SqlInterface:
                     self.rtp.critical_stop("Stopped by sql.get_utility_bills() for ValueError")
 
             ub = UtilityBill(label, amount, tenants, month, year, memo)
-            self.rtp.ubl.append(ub)
+            self.rtp.utilityBillList.append(ub)
             self.logger.info("Utility Bill found: {} for {} split between tenants: {}".format(label, amount, tenants_str))
 
     def check_utility_bill_tenants(self):
         id_list = []
-        for t in self.rtp.tl:
+        for t in self.rtp.tenantList:
             id_list.append(t.id)
 
-        for bill in self.rtp.ubl:
+        for bill in self.rtp.utilityBillList:
             for tenant in bill.tenants:
                 if tenant not in id_list:
                     self.logger.critical("A bill is targeted for a non-active tenant_id in check_utility_bill_tenants: {}".format(tenant))
@@ -69,22 +76,23 @@ class SqlInterface:
 
     def prepare_tennant_bills(self):
         """ Create tenant bills """
-        for t in self.rtp.tl:
+        for tenant in self.rtp.tenantList:
             tb = TenantBill()
-            tb.tenant_id = t.id
-            tb.tenant_name = t.name
-            tb.email_addr = t.email_addr
+            tb.tenant_id = tenant.id
+            tb.tenant_name = tenant.name
+            tb.email_addr = tenant.email_addr
             tb.month = self.rtp.month_int
             tb.year = self.rtp.year
-            tb.charge_room = t.room_rate
-            for bill in self.rtp.ubl:
-                if t.id in bill.tenants:
+            tb.charge_room = tenant.room_rate
+            tb.memo_recurring, tb.charge_recurring = self.rtp.get_recurring_by_tenant(tenant.id)
+            for bill in self.rtp.utilityBillList:
+                if tenant.id in bill.tenants:
                     self.__add_bill(bill, tb)
-            self.rtp.tbl.append(tb)
+            self.rtp.tenantBillList.append(tb)
 
     def utility_bills_sql_insert(self):
         """ Insert bills in the table. Will check for duplicates first, and warn the user if found. """
-        for ub in self.rtp.ubl:
+        for ub in self.rtp.utilityBillList:
             tenant_str = self.__tenants_list_to_str(ub)
             self.sql_curr.execute("SELECT * from utility_bills WHERE (year IS ?) and (month is ?) and (label IS ?)", [ub.year, ub.month, ub.label])
             fetch = self.sql_curr.fetchall()
@@ -94,18 +102,18 @@ class SqlInterface:
             else:
                 self.sql_curr.execute("INSERT INTO utility_bills VALUES (?,?,?,?,?,?)", [ub.label, ub.amount, ub.month, ub.year, tenant_str, ub.memo])
         self.sql_conn.commit()
-        self.rtp.ubl.clear()
+        self.rtp.utilityBillList.clear()
         return
 
     def utility_bills_sql_update(self):
         """ Insert bills in the table. Will check for duplicates first, and warn the user if found. """
-        for ub in self.rtp.ubl:
+        for ub in self.rtp.utilityBillList:
             tenant_str = self.__tenants_list_to_str(ub)
             self.sql_curr.execute("UPDATE utility_bills SET amount = ?, tenants = ? WHERE (year IS ?) and (month is ?) and (label IS ?)", [ub.amount, tenant_str, ub.year, ub.month, ub.label])
         self.sql_conn.commit()
 
     def tenant_bills_sql_insert(self):
-        for t in self.rtp.tbl:
+        for t in self.rtp.tenantBillList:
             self.sql_curr.execute("INSERT OR REPLACE INTO tenant_bills VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                                   [t.tenant_id, t.tenant_name, t.month, t.year, t.paid,
                                   t.charge_room, t.charge_internet, t.charge_electricity, t.charge_gas, t.charge_other, t.charge_total,
@@ -114,7 +122,7 @@ class SqlInterface:
         return True
 
     def tenant_bills_sql_update(self):
-        for t in self.rtp.tbl:
+        for t in self.rtp.tenantBillList:
             print("update....")
             self.sql_curr.execute("""UPDATE tenant_bills 
                                       SET paid = ?, charge_room = ?, charge_internet = ?, charge_electricity = ?, charge_gas = ?, charge_other = ?,
@@ -153,20 +161,32 @@ class SqlInterface:
         tb.memo_gas = row[12]
         tb.memo_electricity = row[13]
         tb.memo_other = row[14]
-        self.rtp.tbl.append(tb)
+        self.rtp.tenantBillList.append(tb)
+
+    def __sql_recurringcharges__(self):
+        """
+        Get a recurring charge from the db
+        row[0] = label
+        row[1] = amount
+        row[2] = tenant
+        row[3] = memo
+        """
+        self.rtp.rcl = []
+        for row in self.sql_curr:
+            self.rtp.rcl.append(RecurringCharges(row[0], row[1], row[2], row[3]))
 
     def __sql_tenants_to_list(self):
-        self.rtp.tl = []
+        self.rtp.tenantList = []
         for row in self.sql_curr:
             tenant = Tenant()
             tenant.id = row[0]
             tenant.name = row[1]
             tenant.email_addr = row[2]
             tenant.room_rate = row[4]
-            self.rtp.tl.append(tenant)
+            self.rtp.tenantList.append(tenant)
             self.logger.info("Tenant found: {}, ID: {}, email_addr: {}".format(tenant.name, tenant.id, tenant.email_addr))
 
-        if len(self.rtp.tl) == 0:
+        if len(self.rtp.tenantList) == 0:
             self.rtp.print_error("No tenants retrieved by query!")
 
     def __add_bill(self, bill: UtilityBill, tb: TenantBill):
