@@ -37,7 +37,7 @@ class PdfCompositor:
                          memo_gas=format_values(t.memo_gas),
                          memo_internet=format_values(t.memo_internet),
                          memo_electricity=format_values(t.memo_electricity),
-                         memo_recurring=format_values(t.memo_other),
+                         memo_recurring=format_values(t.memo_recurring),
                          memo_other=format_values(t.memo_other),
                          )
             docx = self.rtp.google_path + "bills\\" + self.__format_file_name(t, "docx")
